@@ -26,4 +26,8 @@ public class Post {
     private List<Comment> comments;
 
     // Getters and setters...
+
+    public void setUser(User user) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
