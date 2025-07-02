@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.postgresql.MasChat.dto.LoginRequest;
 import com.postgresql.MasChat.dto.RegisterRequest;
+import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.security.JwtTokenProvider;
 import com.postgresql.MasChat.service.UserService;
 
@@ -29,35 +30,49 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            userService.register(request);
-            Map<String, String> response = new HashMap<>();
+            User registeredUser = userService.register(request);
+            String token = jwtTokenProvider.generateToken(registeredUser.getUsername());
+            
+            Map<String, Object> response = new HashMap<>();
             response.put("message", "User registered successfully!");
+            response.put("token", token);
+            response.put("username", registeredUser.getUsername());
+            response.put("userId", registeredUser.getId());
+            
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        System.out.println("Received login for: " + request.getUsername());
         try {
             authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
-            String token = jwtTokenProvider.generateToken(request.getUsername());
-            System.out.println("Returning token: " + token);
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-            response.put("message", "Login successful!");
-            response.put("username", request.getUsername());
-            return ResponseEntity.ok(response);
+
+            User user = userService.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+            String token = jwtTokenProvider.generateToken(user.getUsername());
+
+            // You can create a DTO for user if you want to avoid exposing sensitive fields
+            Map<String, Object> userObj = new HashMap<>();
+            userObj.put("username", user.getUsername());
+            userObj.put("userId", user.getId());
+            userObj.put("profilePicture", user.getProfilePicture());
+            userObj.put("fullName", user.getFullName());
+            userObj.put("email", user.getEmail());
+            // add more fields as needed
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Login successful!",
+                "token", token,
+                "user", userObj
+            ));
         } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Invalid username or password");
-            return ResponseEntity.status(401).body(response);
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
         }
     }
 

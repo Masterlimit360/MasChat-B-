@@ -9,7 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,7 +32,14 @@ public class User {
 
     private String fullName;
     private String profilePicture;
+    private String coverPhoto;
+    private String bio;
     private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "details_id", referencedColumnName = "id")
+    private UserDetails details;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Post> posts;
@@ -51,6 +60,37 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
+    }
+    public String getCoverPhoto() {
+        return coverPhoto;
+    }
+
+    public void setCoverPhoto(String coverPhoto) {
+        this.coverPhoto = coverPhoto;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public UserDetails getDetails() {
+        return details;
+    }
+
+    public void setDetails(UserDetails details) {
+        this.details = details;
     }
 
     public Long getId() {
@@ -140,4 +180,16 @@ public class User {
     public void setReceivedMessages(List<Message> receivedMessages) {
         this.receivedMessages = receivedMessages;
     }
+
+    @Column(name = "verified")
+private Boolean verified = false;
+
+public Boolean getVerified() {
+    return verified;
+}
+
+public void setVerified(Boolean verified) {
+    this.verified = verified;
+}
+
 }
