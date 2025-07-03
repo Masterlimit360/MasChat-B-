@@ -33,7 +33,9 @@ public class Post {
     @Column(nullable = false, length = 1000)
     private String content;
 
-    private String userName;
+    @ManyToOne
+    @JoinColumn(name = "user_name", nullable = false)
+    private User userName;
 
     private String imageUrl;
 
@@ -52,7 +54,7 @@ public class Post {
         super();
     }
 
-    public Post(UUID postID, User userID, String content, String userName, String imageurl, String videoUrl,
+    public Post(UUID postID, User userID, String content, User userName, String imageurl, String videoUrl,
             LocalDateTime createdAt, List<Comment> comments, int likes) {
         this.postID = postID;
         this.userID = userID;
@@ -82,11 +84,11 @@ public class Post {
         this.userID = userID;
     }
 
-    public String getUserName() {
+    public User getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    public void setUserName(User userName) {
         this.userName = userName;
     }
 
