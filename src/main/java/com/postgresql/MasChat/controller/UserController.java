@@ -26,4 +26,6 @@ public class UserController {
     public User getUser(@PathVariable String username) {
         return userService.findByUsername(username).orElse(null);
     }
+
+
 }
