@@ -1,0 +1,14 @@
+package com.postgresql.MasChat.repository;
+
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.postgresql.MasChat.model.Like;
+
+
+@Repository
+public interface LikeRepository extends JpaRepository<Like, UUID> {
+    // No need to override deleteById unless custom behavior is required
+}
