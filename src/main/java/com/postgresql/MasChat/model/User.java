@@ -1,6 +1,9 @@
 package com.postgresql.MasChat.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,8 +16,9 @@ import jakarta.persistence.Table;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator
+    private UUID userID;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -22,7 +26,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "pass_word", nullable = false)
     private String password;
 
     private String fullName;
@@ -32,18 +36,21 @@ public class User {
     public User() {
     }
 
-    public User(String username, String password, String email) {
+    public User(UUID userID, String username, String password, String email, String fullName, String profilePicture) {
+        this.userID = userID;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.fullName = fullName;
+        this.profilePicture = profilePicture;
     }
 
-    public Long getId() {
-        return id;
+    public UUID getUserID() {
+        return userID;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUserID(UUID userID) {
+        this.userID = userID;
     }
 
     public String getUsername() {
