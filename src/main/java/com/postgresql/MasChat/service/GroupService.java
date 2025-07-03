@@ -35,8 +35,8 @@ public class GroupService {
     }
 
     // Deletes a particular group from the database
-    public ArrayList<Group> deleteGroupFromDB(UUID id) {
-        groupRepository.deleteById(id);
+    public ArrayList<Group> deleteGroupFromDB(UUID groupid) {
+        groupRepository.deleteById(groupid);
         ArrayList<Group> result = retrieveGroupsFromDB();
         return result;
     }

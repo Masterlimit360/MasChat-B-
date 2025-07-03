@@ -1,11 +1,12 @@
 package com.postgresql.MasChat.service;
 
-import com.postgresql.MasChat.model.User;
-import com.postgresql.MasChat.repository.UserRepository;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import com.postgresql.MasChat.model.User;
+import com.postgresql.MasChat.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -18,5 +19,9 @@ public class UserService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    public void delete(User user) {
+        userRepository.delete(user);
     }
 }
