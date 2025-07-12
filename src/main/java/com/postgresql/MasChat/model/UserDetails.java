@@ -1,5 +1,6 @@
 package com.postgresql.MasChat.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,6 +12,7 @@ public class UserDetails {
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonBackReference // prevent infinite recursion when serializing
     private User user;
 
     @Column(name = "profile_type")
@@ -49,10 +51,10 @@ public class UserDetails {
     @Column(name = "following_count")
     private Integer followingCount = 0;
 
-    public UserDetails() {
-    }
+    public UserDetails() {}
 
     // Getters and Setters
+
     public Long getId() {
         return id;
     }

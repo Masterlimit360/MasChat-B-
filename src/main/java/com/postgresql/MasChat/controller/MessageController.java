@@ -1,44 +1,35 @@
 package com.postgresql.MasChat.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import com.postgresql.MasChat.model.Message;
-import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.service.MessageService;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/messages")
 public class MessageController {
     @Autowired
     private MessageService messageService;
-    
-    @PostMapping
+
+    @PostMapping("/send")
     public ResponseEntity<Message> sendMessage(
-        @RequestBody Message message,
-        @AuthenticationPrincipal User sender
+        @RequestParam Long senderId,
+        @RequestParam Long recipientId,
+        @RequestParam String content
     ) {
-        message.setSender(sender);
-        return ResponseEntity.ok(messageService.sendMessage(message));
+        Message message = messageService.sendMessage(senderId, recipientId, content);
+        return ResponseEntity.ok(message);
     }
-    
-    @GetMapping("/conversation/{recipientId}")
+
+    @GetMapping("/conversation")
     public ResponseEntity<List<Message>> getConversation(
-        @PathVariable Long recipientId,
-        @AuthenticationPrincipal User sender
+        @RequestParam Long userId1,
+        @RequestParam Long userId2
     ) {
-        User recipient = new User();
-        recipient.setId(recipientId);
-        return ResponseEntity.ok(messageService.getConversation(sender, recipient));
+        List<Message> messages = messageService.getConversation(userId1, userId2);
+        return ResponseEntity.ok(messages);
     }
 }

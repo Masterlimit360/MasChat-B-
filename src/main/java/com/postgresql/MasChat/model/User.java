@@ -1,7 +1,10 @@
 package com.postgresql.MasChat.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -10,6 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -34,11 +39,13 @@ public class User {
     private String profilePicture;
     private String coverPhoto;
     private String bio;
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "details_id", referencedColumnName = "id")
+    @JsonManagedReference // indicates this side manages the relationship in JSON
     private UserDetails details;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -53,45 +60,26 @@ public class User {
     @OneToMany(mappedBy = "recipient")
     private List<Message> receivedMessages;
 
-    public User() {
-    }
+    @Column(name = "verified")
+    private Boolean verified = false;
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_friends",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    private List<User> friends = new ArrayList<>();
+
+    public User() {}
 
     public User(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
     }
-    public String getCoverPhoto() {
-        return coverPhoto;
-    }
 
-    public void setCoverPhoto(String coverPhoto) {
-        this.coverPhoto = coverPhoto;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public UserDetails getDetails() {
-        return details;
-    }
-
-    public void setDetails(UserDetails details) {
-        this.details = details;
-    }
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -141,12 +129,47 @@ public class User {
         this.profilePicture = profilePicture;
     }
 
+    public String getCoverPhoto() {
+        return coverPhoto;
+    }
+
+    public void setCoverPhoto(String coverPhoto) {
+        this.coverPhoto = coverPhoto;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public UserDetails getDetails() {
+        return details;
+    }
+
+    public void setDetails(UserDetails details) {
+        this.details = details;
+        if (details != null) {
+            details.setUser(this); // ensure bidirectional consistency
+        }
     }
 
     public List<Post> getPosts() {
@@ -181,15 +204,19 @@ public class User {
         this.receivedMessages = receivedMessages;
     }
 
-    @Column(name = "verified")
-private Boolean verified = false;
+    public Boolean getVerified() {
+        return verified;
+    }
 
-public Boolean getVerified() {
-    return verified;
-}
+    public void setVerified(Boolean verified) {
+        this.verified = verified;
+    }
 
-public void setVerified(Boolean verified) {
-    this.verified = verified;
-}
+    public List<User> getFriends() {
+        return friends;
+    }
 
+    public void setFriends(List<User> friends) {
+        this.friends = friends;
+    }
 }

@@ -11,21 +11,28 @@ public class FriendRequest {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "sender_id")
     private User sender;
 
     @ManyToOne
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private User receiver;
+    @JoinColumn(name = "recipient_id")
+    private User recipient;
 
-    @Enumerated(EnumType.STRING)
-    private Status status = Status.PENDING;
+    @Column(nullable = false)
+    private String status;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
-    public enum Status {
-        PENDING, ACCEPTED, REJECTED
-    }
+    public User getSender() { return sender; }
+    public void setSender(User sender) { this.sender = sender; }
 
-    // Getters and setters...
+    public User getRecipient() { return recipient; }
+    public void setRecipient(User recipient) { this.recipient = recipient; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

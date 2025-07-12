@@ -1,6 +1,7 @@
 package com.postgresql.MasChat.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.RegisterRequest;
-import com.postgresql.MasChat.dto.UserDetailsDTO;
 import com.postgresql.MasChat.exception.ResourceNotFoundException;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.model.UserDetails;
@@ -23,6 +23,8 @@ public class UserService {
     
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    
 
     public User findById(Long userId) {
         return userRepository.findById(userId)
@@ -50,32 +52,41 @@ public class UserService {
     }
 
     @Transactional
-    public User updateProfile(Long userId, ProfileUpdateRequest request) {
-        User user = this.findById(userId);
-        
-        if (request.getBio() != null) user.setBio(request.getBio());
-        if (request.getFullName() != null) user.setFullName(request.getFullName());
-        
-        if (request.getDetails() != null) {
-            if (user.getDetails() == null) {
-                user.setDetails(new UserDetails());
-            }
-            UserDetailsDTO detailsDto = request.getDetails();
-            if (detailsDto.getProfileType() != null) user.getDetails().setProfileType(detailsDto.getProfileType());
-            if (detailsDto.getWorksAt1() != null) user.getDetails().setWorksAt1(detailsDto.getWorksAt1());
-            if (detailsDto.getWorksAt2() != null) user.getDetails().setWorksAt2(detailsDto.getWorksAt2());
-            if (detailsDto.getStudiedAt() != null) user.getDetails().setStudiedAt(detailsDto.getStudiedAt());
-            if (detailsDto.getWentTo() != null) user.getDetails().setWentTo(detailsDto.getWentTo());
-            if (detailsDto.getCurrentCity() != null) user.getDetails().setCurrentCity(detailsDto.getCurrentCity());
-            if (detailsDto.getHometown() != null) user.getDetails().setHometown(detailsDto.getHometown());
-            if (detailsDto.getRelationshipStatus() != null) user.getDetails().setRelationshipStatus(detailsDto.getRelationshipStatus());
-            if (detailsDto.getShowAvatar() != null) user.getDetails().setShowAvatar(detailsDto.getShowAvatar());
-            if (detailsDto.getAvatar() != null) user.getDetails().setAvatar(detailsDto.getAvatar());
+public User updateProfile(Long userId, ProfileUpdateRequest request) {
+    User user = this.findById(userId);
+    
+    if (request.getBio() != null) user.setBio(request.getBio());
+    if (request.getFullName() != null) user.setFullName(request.getFullName());
+    if (request.getProfilePicture() != null) user.setProfilePicture(request.getProfilePicture());
+    if (request.getCoverPhoto() != null) user.setCoverPhoto(request.getCoverPhoto());
+
+    // Update details
+    if (request.getDetails() != null) {
+        UserDetails details = user.getDetails();
+        if (details == null) {
+            details = new UserDetails();
+            details.setUser(user);
         }
-        
-        user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+
+        var dto = request.getDetails();
+        if (dto.getProfileType() != null) details.setProfileType(dto.getProfileType());
+        if (dto.getWorksAt1() != null) details.setWorksAt1(dto.getWorksAt1());
+        if (dto.getWorksAt2() != null) details.setWorksAt2(dto.getWorksAt2());
+        if (dto.getStudiedAt() != null) details.setStudiedAt(dto.getStudiedAt());
+        if (dto.getWentTo() != null) details.setWentTo(dto.getWentTo());
+        if (dto.getCurrentCity() != null) details.setCurrentCity(dto.getCurrentCity());
+        if (dto.getHometown() != null) details.setHometown(dto.getHometown());
+        if (dto.getRelationshipStatus() != null) details.setRelationshipStatus(dto.getRelationshipStatus());
+        if (dto.getShowAvatar() != null) details.setShowAvatar(dto.getShowAvatar());
+        if (dto.getAvatar() != null) details.setAvatar(dto.getAvatar());
+
+        user.setDetails(details); // ensures bidirectional consistency
     }
+
+    user.setUpdatedAt(LocalDateTime.now());
+    return userRepository.save(user);
+}
+
 
     @Transactional
     public User updateProfilePicture(Long userId, String imageUrl) {
@@ -133,5 +144,10 @@ public class UserService {
             return userOpt;
         }
         return Optional.empty();
+    }
+
+    public List<User> getFriends(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        return user.getFriends();
     }
 }

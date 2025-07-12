@@ -4,6 +4,9 @@ public class ProfileUpdateRequest {
     private String bio;
     private String fullName;
     private UserDetailsDTO details;
+    private String profilePicture;
+    private String coverPhoto;
+
 
     // Getters and Setters
     public String getBio() {
@@ -28,5 +31,18 @@ public class ProfileUpdateRequest {
 
     public void setDetails(UserDetailsDTO details) {
         this.details = details;
+    }
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public String getCoverPhoto() {
+        return coverPhoto;
+    }
+    public void setCoverPhoto(String coverPhoto) {
+        this.coverPhoto = coverPhoto;
     }
 }

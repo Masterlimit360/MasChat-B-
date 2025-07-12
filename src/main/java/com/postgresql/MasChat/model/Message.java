@@ -1,7 +1,15 @@
 package com.postgresql.MasChat.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "messages")
@@ -11,10 +19,6 @@ public class Message {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "chat_id", nullable = false)
-    private Chat chat;
-
-    @ManyToOne
     @JoinColumn(name = "sender_id")
     private User sender;
 
@@ -22,10 +26,23 @@ public class Message {
     @JoinColumn(name = "recipient_id")
     private User recipient;
 
+    @ManyToOne
+    @JoinColumn(name = "chat_id")
+    private Chat chat;
+
     @Column(nullable = false, length = 1000)
     private String content;
 
-    private LocalDateTime sentAt;
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    @Column(nullable = false)
+    private LocalDateTime sentAt = LocalDateTime.now();
 
     // Getters and setters...
 
@@ -51,5 +68,13 @@ public class Message {
 
     public void setSentAt(LocalDateTime sentAt) {
         this.sentAt = sentAt;
+    }
+
+    public Chat getChat() {
+        return chat;
+    }
+
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
 }

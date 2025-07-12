@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.model.User;
+import com.postgresql.MasChat.model.UserDetails;
+import com.postgresql.MasChat.repository.UserRepository;
 import com.postgresql.MasChat.service.UserService;
 
 @RestController
@@ -28,6 +31,11 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    
 
     @GetMapping("/{userId}/profile")
     public ResponseEntity<User> getUserProfile(@PathVariable Long userId) {
@@ -46,9 +54,10 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
             @PathVariable Long userId,
             @RequestBody ProfileUpdateRequest request
     ) {
-        User updatedUser = userService.updateProfile(userId, request);
-        return ResponseEntity.ok(updatedUser);
+        User updated = userService.updateProfile(userId, request);
+        return ResponseEntity.ok(updated);
     }
+    
 
     @PostMapping("/{userId}/profile/picture")
     public ResponseEntity<String> updateProfilePicture(
@@ -108,19 +117,6 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         }
     }
 
-    @PostMapping("/{userId}/cover/picture")
-    public ResponseEntity<String> updateCoverPicture(
-            @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file
-    ) {
-        try {
-            String imageUrl = saveImage(file, "cover");
-            userService.updateCoverPhoto(userId, imageUrl);
-            return ResponseEntity.ok(imageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload cover image");
-        }
-    }
 
     private String saveImage(MultipartFile file, String type) throws IOException {
         String uploadDir = "uploads/";
@@ -136,4 +132,43 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         // Return the full URL for the image
         return "http://10.132.74.85:8080/uploads/" + fileName;
     }
+
+    @PutMapping("/{id}")
+public User updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
+    return userRepository.findById(id).map(user -> {
+        user.setUsername(updatedUser.getUsername());
+        user.setFullName(updatedUser.getFullName());
+        user.setEmail(updatedUser.getEmail());
+        user.setProfilePicture(updatedUser.getProfilePicture());
+        user.setCoverPhoto(updatedUser.getCoverPhoto());
+        user.setBio(updatedUser.getBio());
+
+        // ✅ Update details if included in request body
+        if (updatedUser.getDetails() != null) {
+            if (user.getDetails() == null) {
+                user.setDetails(updatedUser.getDetails());
+            } else {
+                UserDetails details = user.getDetails();
+                details.setProfileType(updatedUser.getDetails().getProfileType());
+                details.setWorksAt1(updatedUser.getDetails().getWorksAt1());
+                details.setWorksAt2(updatedUser.getDetails().getWorksAt2());
+                details.setStudiedAt(updatedUser.getDetails().getStudiedAt());
+                details.setWentTo(updatedUser.getDetails().getWentTo());
+                details.setCurrentCity(updatedUser.getDetails().getCurrentCity());
+                details.setHometown(updatedUser.getDetails().getHometown());
+                details.setRelationshipStatus(updatedUser.getDetails().getRelationshipStatus());
+                details.setShowAvatar(updatedUser.getDetails().getShowAvatar());
+                details.setAvatar(updatedUser.getDetails().getAvatar());
+            }
+        }
+
+        return userRepository.save(user);
+    }).orElseThrow(() -> new RuntimeException("User not found with id " + id));
+}
+
+@GetMapping("/{userId}/friends")
+public ResponseEntity<List<User>> getFriends(@PathVariable Long userId) {
+    List<User> friends = userService.getFriends(userId);
+    return ResponseEntity.ok(friends);
+}
 }

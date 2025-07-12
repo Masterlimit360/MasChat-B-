@@ -8,12 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.postgresql.MasChat.dto.LoginRequest;
+import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.RegisterRequest;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.security.JwtTokenProvider;
@@ -27,6 +30,14 @@ public class AuthController {
     @Autowired private UserService userService;
     @Autowired private JwtTokenProvider jwtTokenProvider;
 
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<User> updateProfile(
+            @PathVariable Long id,
+            @RequestBody ProfileUpdateRequest request
+    ) {
+        User updatedUser = userService.updateProfile(id, request);
+        return ResponseEntity.ok(updatedUser);
+    }
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
