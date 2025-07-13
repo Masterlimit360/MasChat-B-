@@ -16,7 +16,7 @@ public class UserDetails {
     private User user;
 
     @Column(name = "profile_type")
-    private String profileType = "Just for fun";
+    private String profileType = "";
 
     @Column(name = "works_at1")
     private String worksAt1;
