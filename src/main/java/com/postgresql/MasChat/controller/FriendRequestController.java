@@ -14,8 +14,8 @@ public class FriendRequestController {
     @Autowired
     private FriendRequestService friendRequestService;
 
-    @PostMapping("/request")
-    public ResponseEntity<FriendRequest> sendRequest(
+    @PostMapping("/api/friend-requests/request")
+    public ResponseEntity<?> sendRequest(
         @RequestParam Long senderId,
         @RequestParam Long recipientId
     ) {
