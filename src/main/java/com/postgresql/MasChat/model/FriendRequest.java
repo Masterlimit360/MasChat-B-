@@ -2,6 +2,7 @@ package com.postgresql.MasChat.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,11 +21,13 @@ public class FriendRequest {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
+    @JsonBackReference
     private User sender;
 
     @ManyToOne
-    @JoinColumn(name = "recipient_id")
-    private User recipient;
+    @JoinColumn(name = "receiver_id")
+    @JsonBackReference
+    private User receiver;
 
     @Column(nullable = false)
     private String status;
@@ -35,12 +38,15 @@ public class FriendRequest {
     public User getSender() { return sender; }
     public void setSender(User sender) { this.sender = sender; }
 
-    public User getRecipient() { return recipient; }
-    public void setRecipient(User recipient) { this.recipient = recipient; }
+    public User getReceiver() { return receiver; }
+    public void setReceiver(User receiver) { this.receiver = receiver; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 }

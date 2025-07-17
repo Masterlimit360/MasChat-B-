@@ -3,6 +3,7 @@ package com.postgresql.MasChat.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,9 +28,11 @@ public class Chat {
         joinColumns = @JoinColumn(name = "chat_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @JsonIgnore
     private List<User> users;
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Message> messages;
 
     private LocalDateTime createdAt = LocalDateTime.now();

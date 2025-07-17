@@ -13,25 +13,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.postgresql.MasChat.model.FriendRequest;
 import com.postgresql.MasChat.model.User;
+import com.postgresql.MasChat.dto.UserDTO;
+import com.postgresql.MasChat.dto.FriendRequestDTO;
 import com.postgresql.MasChat.service.FriendService;
 
 @RestController
 @RequestMapping("/api/friends")
 public class FriendController {
-    private final FriendService friendService;
-
-    public FriendController(FriendService friendService) {
-        this.friendService = friendService;
-    }
+    @Autowired
+    private FriendService friendService;
 
     @GetMapping("/suggestions/{userId}")
-    public List<User> getSuggestions(@PathVariable Long userId) {
-        return friendService.getSuggestions(userId);
+    public List<UserDTO> getSuggestions(@PathVariable Long userId) {
+        return friendService.getSuggestions(userId).stream().map(UserDTO::fromEntity).toList();
     }
 
     @GetMapping("/requests/{userId}")
-    public List<FriendRequest> getFriendRequests(@PathVariable Long userId) {
-        return friendService.getFriendRequests(userId);
+    public List<FriendRequestDTO> getFriendRequests(@PathVariable Long userId) {
+        return friendService.getFriendRequests(userId).stream().map(FriendRequestDTO::fromEntity).toList();
     }
 
     @PostMapping("/request")
@@ -45,8 +44,8 @@ public class FriendController {
     }
 
     @GetMapping("/list/{userId}")
-    public List<User> getFriends(@PathVariable Long userId) {
-        return friendService.getFriends(userId);
+    public List<UserDTO> getFriends(@PathVariable Long userId) {
+        return friendService.getFriends(userId).stream().map(UserDTO::fromEntity).toList();
     }
 
     @DeleteMapping("/request/{requestId}")

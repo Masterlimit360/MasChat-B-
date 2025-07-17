@@ -150,4 +150,12 @@ public User updateProfile(Long userId, ProfileUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow();
         return user.getFriends();
     }
+
+    public List<User> searchUsers(String query) {
+        String q = query.toLowerCase();
+        return userRepository.findAll().stream()
+            .filter(u -> (u.getUsername() != null && u.getUsername().toLowerCase().contains(q)) ||
+                         (u.getFullName() != null && u.getFullName().toLowerCase().contains(q)))
+            .toList();
+    }
 }

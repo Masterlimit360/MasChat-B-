@@ -35,4 +35,11 @@ public class MessageService {
             user1, user2, user2, user1
         );
     }
+
+    public List<Message> getAllMessagesForUser(Long userId) {
+        // Return all messages where user is sender or recipient
+        return messageRepository.findAll().stream()
+            .filter(m -> m.getSender().getId().equals(userId) || m.getRecipient().getId().equals(userId))
+            .toList();
+    }
 }

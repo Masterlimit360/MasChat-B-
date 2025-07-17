@@ -1,5 +1,6 @@
 package com.postgresql.MasChat.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -18,10 +19,12 @@ public class Attachment {
 
     @ManyToOne
     @JoinColumn(name = "post_id")
+    @JsonBackReference
     private Post post;
 
     @ManyToOne
     @JoinColumn(name = "message_id")
+    @JsonBackReference
     private Message message;
 
     private LocalDateTime uploadedAt = LocalDateTime.now();

@@ -2,6 +2,7 @@ package com.postgresql.MasChat.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,14 +21,17 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
+    @JsonBackReference
     private User sender;
 
     @ManyToOne
     @JoinColumn(name = "recipient_id")
+    @JsonBackReference
     private User recipient;
 
     @ManyToOne
     @JoinColumn(name = "chat_id")
+    @JsonBackReference
     private Chat chat;
 
     @Column(nullable = false, length = 1000)

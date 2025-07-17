@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.postgresql.MasChat.model.Comment;
 import com.postgresql.MasChat.model.Post;
+import com.postgresql.MasChat.dto.PostRequestDto;
+import com.postgresql.MasChat.dto.PostDTO;
 import com.postgresql.MasChat.service.PostService;
 
 @RestController
@@ -23,13 +25,14 @@ public class PostController {
     private PostService postService;
 
     @PostMapping
-    public ResponseEntity<Post> createPost(@RequestBody Post post, @RequestParam Long userId) {
-        return ResponseEntity.status(201).body(postService.createPost(post, userId));
+    public ResponseEntity<PostDTO> createPost(@RequestBody PostRequestDto postDto, @RequestParam Long userId) {
+        Post post = postService.createPost(postDto, userId);
+        return ResponseEntity.status(201).body(PostDTO.fromEntity(post));
     }
 
     @GetMapping
-    public ResponseEntity<List<Post>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<List<PostDTO>> getAllPosts() {
+        return ResponseEntity.ok(postService.getAllPosts().stream().map(PostDTO::fromEntity).toList());
     }
 
     @PostMapping("/{postId}/like")

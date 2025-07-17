@@ -12,7 +12,7 @@ public class UserDetails {
 
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @JsonBackReference // prevent infinite recursion when serializing
+    @JsonBackReference
     private User user;
 
     @Column(name = "profile_type")

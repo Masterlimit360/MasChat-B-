@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,19 +46,23 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "details_id", referencedColumnName = "id")
-    @JsonManagedReference // indicates this side manages the relationship in JSON
+    @JsonManagedReference
     private UserDetails details;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Post> posts;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Comment> comments;
 
     @OneToMany(mappedBy = "sender")
+    @JsonIgnore
     private List<Message> sentMessages;
 
     @OneToMany(mappedBy = "recipient")
+    @JsonIgnore
     private List<Message> receivedMessages;
 
     @Column(name = "verified")
@@ -69,6 +74,7 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
+    @JsonIgnore
     private List<User> friends = new ArrayList<>();
 
     public User() {}

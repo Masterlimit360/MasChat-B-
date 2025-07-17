@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
+import com.postgresql.MasChat.dto.UserDTO;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.model.UserDetails;
 import com.postgresql.MasChat.repository.UserRepository;
@@ -48,6 +50,12 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
     return ResponseEntity.ok(user);
 }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<UserDTO>> searchUsers(@RequestParam String query) {
+        List<User> users = userService.searchUsers(query);
+        List<UserDTO> dtos = users.stream().map(UserDTO::fromEntity).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
 
     @PutMapping("/{userId}/profile")
     public ResponseEntity<User> updateProfile(
@@ -130,7 +138,7 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Files.write(filePath, file.getBytes());
         
         // Return the full URL for the image
-        return "http://192.168.255.125:8080/uploads/" + fileName;
+        return "http://192.168.156.125:8080/uploads/" + fileName;
     }
 
     @PutMapping("/{id}")

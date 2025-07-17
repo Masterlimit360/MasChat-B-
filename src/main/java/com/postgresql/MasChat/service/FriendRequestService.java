@@ -20,7 +20,7 @@ public class FriendRequestService {
         User recipient = userRepository.findById(recipientId).orElseThrow();
         FriendRequest request = new FriendRequest();
         request.setSender(sender);
-        request.setRecipient(recipient);
+        request.setReceiver(recipient);
         request.setStatus("pending");
         request.setCreatedAt(java.time.LocalDateTime.now());
         return friendRequestRepository.save(request);
@@ -34,6 +34,6 @@ public class FriendRequestService {
 
     public List<FriendRequest> getPendingRequests(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
-        return friendRequestRepository.findByRecipientAndStatus(user, "pending");
+        return friendRequestRepository.findByReceiverAndStatus(user, "pending");
     }
 }

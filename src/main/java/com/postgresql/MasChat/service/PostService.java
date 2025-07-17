@@ -2,6 +2,7 @@ package com.postgresql.MasChat.service;
 
 import com.postgresql.MasChat.model.*;
 import com.postgresql.MasChat.repository.*;
+import com.postgresql.MasChat.dto.PostRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -15,8 +16,12 @@ public class PostService {
     @Autowired
     private CommentRepository commentRepository;
 
-    public Post createPost(Post post, Long userId) {
+    public Post createPost(PostRequestDto dto, Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
+        Post post = new Post();
+        post.setContent(dto.getContent());
+        post.setImageUrl(dto.getImageUrl());
+        post.setVideoUrl(dto.getVideoUrl());
         post.setUser(user);
         return postRepository.save(post);
     }

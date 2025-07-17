@@ -1,5 +1,6 @@
 package com.postgresql.MasChat.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,14 +13,17 @@ public class Like {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
+    @JsonBackReference
     private Post post;
 
     @ManyToOne
     @JoinColumn(name = "comment_id")
+    @JsonBackReference
     private Comment comment;
 
     private LocalDateTime createdAt = LocalDateTime.now();
