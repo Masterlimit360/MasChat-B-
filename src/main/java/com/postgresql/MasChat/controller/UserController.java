@@ -138,7 +138,7 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Files.write(filePath, file.getBytes());
         
         // Return the full URL for the image
-        return "http://192.168.156.125:8080/uploads/" + fileName;
+        return "http://10.132.74.85:8080/uploads/" + fileName;
     }
 
     @PutMapping("/{id}")
