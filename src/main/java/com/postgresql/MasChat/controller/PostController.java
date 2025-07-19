@@ -35,6 +35,16 @@ public class PostController {
         return ResponseEntity.ok(postService.getAllPosts().stream().map(PostDTO::fromEntity).toList());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PostDTO>> getPostsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(postService.getPostsByUser(userId).stream().map(PostDTO::fromEntity).toList());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PostDTO>> searchPosts(@RequestParam String query) {
+        return ResponseEntity.ok(postService.searchPosts(query).stream().map(PostDTO::fromEntity).toList());
+    }
+
     @PostMapping("/{postId}/like")
     public ResponseEntity<Post> likePost(@PathVariable Long postId, @RequestParam Long userId) {
         return ResponseEntity.ok(postService.likePost(postId, userId));

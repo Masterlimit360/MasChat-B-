@@ -1,8 +1,8 @@
 package com.postgresql.MasChat.dto;
 
-import com.postgresql.MasChat.model.Story;
+import com.postgresql.MasChat.model.Reel;
 
-public class StoryDTO {
+public class ReelDTO {
     private Long id;
     private Long userId;
     private String username;
@@ -11,15 +11,15 @@ public class StoryDTO {
     private String caption;
     private String createdAt;
 
-    public static StoryDTO fromEntity(Story story) {
-        StoryDTO dto = new StoryDTO();
-        dto.setId(story.getId());
-        dto.setUserId(story.getUser().getId());
-        dto.setUsername(story.getUser().getUsername());
-        dto.setProfilePicture(story.getUser().getProfilePicture());
-        dto.setMediaUrl(story.getMediaUrl());
-        dto.setCaption(story.getCaption());
-        dto.setCreatedAt(story.getCreatedAt().toString());
+    public static ReelDTO fromEntity(Reel reel) {
+        ReelDTO dto = new ReelDTO();
+        dto.setId(reel.getId());
+        dto.setUserId(reel.getUser().getId());
+        dto.setUsername(reel.getUser().getUsername());
+        dto.setProfilePicture(reel.getUser().getProfilePicture());
+        dto.setMediaUrl(reel.getMediaUrl());
+        dto.setCaption(reel.getCaption());
+        dto.setCreatedAt(reel.getCreatedAt().toString());
         return dto;
     }
 

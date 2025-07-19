@@ -30,6 +30,10 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    public List<Post> getPostsByUser(Long userId) {
+        return postRepository.findByUserId(userId);
+    }
+
     public Post likePost(Long postId, Long userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         User user = userRepository.findById(userId).orElseThrow();
@@ -55,5 +59,9 @@ public class PostService {
         comment.setContent(content); // Use setContent instead of setText
         comment.setCreatedAt(java.time.LocalDateTime.now());
         return commentRepository.save(comment);
+    }
+
+    public List<Post> searchPosts(String query) {
+        return postRepository.findByContentContainingIgnoreCase(query);
     }
 }
