@@ -15,11 +15,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.postgresql.MasChat.dto.ForgotPasswordRequest;
 import com.postgresql.MasChat.dto.LoginRequest;
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.RegisterRequest;
+import com.postgresql.MasChat.dto.ResetPasswordRequest;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.security.JwtTokenProvider;
+import com.postgresql.MasChat.service.PasswordResetService;
 import com.postgresql.MasChat.service.UserService;
 
 @RestController
@@ -29,6 +32,7 @@ public class AuthController {
     @Autowired private AuthenticationManager authManager;
     @Autowired private UserService userService;
     @Autowired private JwtTokenProvider jwtTokenProvider;
+    @Autowired private PasswordResetService passwordResetService;
 
     @PutMapping("/{id}/profile")
     public ResponseEntity<User> updateProfile(
@@ -38,6 +42,7 @@ public class AuthController {
         User updatedUser = userService.updateProfile(id, request);
         return ResponseEntity.ok(updatedUser);
     }
+    
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
@@ -84,6 +89,26 @@ public class AuthController {
             ));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            passwordResetService.forgotPassword(request);
+            return ResponseEntity.ok(Map.of("message", "If an account with that email exists, a password reset link has been sent."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            passwordResetService.resetPassword(request);
+            return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

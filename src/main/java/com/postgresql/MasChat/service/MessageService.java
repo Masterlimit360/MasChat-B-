@@ -1,6 +1,9 @@
 package com.postgresql.MasChat.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +12,7 @@ import com.postgresql.MasChat.model.Message;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.repository.MessageRepository;
 import com.postgresql.MasChat.repository.UserRepository;
+import com.postgresql.MasChat.dto.RecentChatDTO;
 
 @Service
 public class MessageService {
@@ -24,7 +28,7 @@ public class MessageService {
         message.setSender(sender);
         message.setRecipient(recipient);
         message.setContent(content);
-        message.setSentAt(java.time.LocalDateTime.now());
+        message.setSentAt(LocalDateTime.now());
         return messageRepository.save(message);
     }
 
@@ -36,7 +40,71 @@ public class MessageService {
         );
     }
 
-    public List<Message> getAllMessagesForUser(Long userId) {
-        return messageRepository.findBySenderIdOrRecipientIdOrderBySentAtDesc(userId, userId);
+    public List<RecentChatDTO> getRecentChats(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        
+        // Get all conversations for this user
+        List<Message> allMessages = messageRepository.findBySenderIdOrRecipientIdOrderBySentAtDesc(userId);
+        
+        // Group by conversation partner and get latest message
+        return allMessages.stream()
+            .collect(Collectors.groupingBy(msg -> {
+                if (msg.getSender().getId().equals(userId)) {
+                    return msg.getRecipient();
+                } else {
+                    return msg.getSender();
+                }
+            }))
+            .entrySet().stream()
+            .map(entry -> {
+                User partner = entry.getKey();
+                List<Message> conversation = entry.getValue();
+                Message latestMessage = conversation.get(0); // Already sorted by sentAt desc
+                
+                // Count unread messages
+                long unreadCount = conversation.stream()
+                    .filter(msg -> !msg.getSender().getId().equals(userId) && !msg.isRead())
+                    .count();
+                
+                return new RecentChatDTO(
+                    partner.getId(),
+                    partner.getUsername(),
+                    partner.getFullName(),
+                    partner.getProfilePicture(),
+                    latestMessage.getContent(),
+                    latestMessage.getSentAt(),
+                    unreadCount,
+                    partner.getOnline() != null ? partner.getOnline() : false
+                );
+            })
+            .collect(Collectors.toList());
+    }
+
+    public void markMessagesAsRead(Long userId, Long partnerId) {
+        List<Message> unreadMessages = messageRepository.findByRecipientIdAndSenderIdAndReadFalse(userId, partnerId);
+        unreadMessages.forEach(msg -> msg.setRead(true));
+        messageRepository.saveAll(unreadMessages);
+    }
+
+    public void deleteMessage(Long messageId, Long userId) {
+        Message message = messageRepository.findById(messageId).orElseThrow();
+        
+        // Only sender can delete their own message
+        if (!message.getSender().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized to delete this message");
+        }
+        
+        messageRepository.delete(message);
+    }
+
+    public void deleteConversation(Long userId, Long partnerId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        User partner = userRepository.findById(partnerId).orElseThrow();
+        
+        List<Message> conversation = messageRepository.findBySenderAndRecipientOrSenderAndRecipientOrderBySentAt(
+            user, partner, partner, user
+        );
+        
+        messageRepository.deleteAll(conversation);
     }
 }

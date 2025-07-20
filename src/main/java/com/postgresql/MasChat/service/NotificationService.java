@@ -7,6 +7,7 @@ import com.postgresql.MasChat.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Service
 public class NotificationService {
@@ -14,6 +15,8 @@ public class NotificationService {
     private NotificationRepository notificationRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     public Notification createNotification(User user, String message) {
         Notification notification = new Notification();
@@ -21,7 +24,14 @@ public class NotificationService {
         notification.setMessage(message);
         notification.setRead(false);
         notification.setCreatedAt(java.time.LocalDateTime.now());
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        // Send via WebSocket
+        messagingTemplate.convertAndSendToUser(
+            user.getId().toString(),
+            "/queue/notifications",
+            saved
+        );
+        return saved;
     }
 
     public List<Notification> getNotifications(User user) {
@@ -37,6 +47,16 @@ public class NotificationService {
         if (notification != null) {
             notification.setRead(true);
             notificationRepository.save(notification);
+            // Optionally, send update via WebSocket
+            messagingTemplate.convertAndSendToUser(
+                notification.getUser().getId().toString(),
+                "/queue/notifications",
+                notification
+            );
         }
+    }
+
+    public void deleteNotification(Long notificationId) {
+        notificationRepository.deleteById(notificationId);
     }
 } 

@@ -64,4 +64,13 @@ public class PostService {
     public List<Post> searchPosts(String query) {
         return postRepository.findByContentContainingIgnoreCase(query);
     }
+
+    public void deletePost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        // Check if the user is the owner of the post
+        if (!post.getUser().getId().equals(userId)) {
+            throw new RuntimeException("User not authorized to delete this post");
+        }
+        postRepository.delete(post);
+    }
 }

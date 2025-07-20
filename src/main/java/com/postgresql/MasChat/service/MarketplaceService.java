@@ -2,8 +2,10 @@ package com.postgresql.MasChat.service;
 
 import com.postgresql.MasChat.model.MarketplaceItem;
 import com.postgresql.MasChat.model.MarketplaceCategory;
+import com.postgresql.MasChat.model.MarketplaceOrder;
 import com.postgresql.MasChat.repository.MarketplaceItemRepository;
 import com.postgresql.MasChat.repository.MarketplaceCategoryRepository;
+import com.postgresql.MasChat.repository.MarketplaceOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -15,6 +17,8 @@ public class MarketplaceService {
     private MarketplaceItemRepository itemRepository;
     @Autowired
     private MarketplaceCategoryRepository categoryRepository;
+    @Autowired
+    private MarketplaceOrderRepository orderRepository;
 
     public List<MarketplaceItem> getAllItems() {
         return itemRepository.findAll();
@@ -75,5 +79,9 @@ public class MarketplaceService {
 
     public MarketplaceCategory createCategory(MarketplaceCategory category) {
         return categoryRepository.save(category);
+    }
+
+    public MarketplaceOrder createOrder(MarketplaceOrder order) {
+        return orderRepository.save(order);
     }
 } 

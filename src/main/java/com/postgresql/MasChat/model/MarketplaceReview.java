@@ -2,6 +2,7 @@ package com.postgresql.MasChat.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "marketplace_reviews")
@@ -12,10 +13,12 @@ public class MarketplaceReview {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id")
+    @JsonIgnore
     private MarketplaceItem item;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
+    @JsonIgnore
     private User reviewer;
 
     private int rating; // 1-5

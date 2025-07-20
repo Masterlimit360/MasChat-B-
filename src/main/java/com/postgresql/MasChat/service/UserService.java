@@ -158,4 +158,11 @@ public User updateProfile(Long userId, ProfileUpdateRequest request) {
                          (u.getFullName() != null && u.getFullName().toLowerCase().contains(q)))
             .toList();
     }
+
+    public List<User> getBestFriends(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<User> friends = user.getFriends();
+        // For now, just return the first two friends (could be sorted by interaction in the future)
+        return friends.stream().limit(2).toList();
+    }
 }

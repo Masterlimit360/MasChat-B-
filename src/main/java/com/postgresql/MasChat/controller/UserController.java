@@ -179,4 +179,10 @@ public ResponseEntity<List<User>> getFriends(@PathVariable Long userId) {
     List<User> friends = userService.getFriends(userId);
     return ResponseEntity.ok(friends);
 }
+
+@GetMapping("/{userId}/best-friends")
+public ResponseEntity<List<User>> getBestFriends(@PathVariable Long userId) {
+    List<User> bestFriends = userService.getBestFriends(userId);
+    return ResponseEntity.ok(bestFriends);
+}
 }

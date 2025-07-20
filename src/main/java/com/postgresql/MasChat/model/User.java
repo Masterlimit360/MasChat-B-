@@ -68,6 +68,9 @@ public class User {
     @Column(name = "verified")
     private Boolean verified = false;
 
+    @Column(name = "is_online")
+    private Boolean isOnline = false;
+
     @ManyToMany
     @JoinTable(
         name = "user_friends",
@@ -216,6 +219,14 @@ public class User {
 
     public void setVerified(Boolean verified) {
         this.verified = verified;
+    }
+
+    public Boolean getOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(Boolean online) {
+        isOnline = online;
     }
 
     public List<User> getFriends() {

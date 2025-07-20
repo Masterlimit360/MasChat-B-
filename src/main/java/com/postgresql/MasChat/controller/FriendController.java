@@ -1,21 +1,13 @@
 package com.postgresql.MasChat.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.postgresql.MasChat.model.FriendRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import com.postgresql.MasChat.model.User;
-import com.postgresql.MasChat.dto.UserDTO;
-import com.postgresql.MasChat.dto.FriendRequestDTO;
+import com.postgresql.MasChat.model.FriendRequest;
 import com.postgresql.MasChat.service.FriendService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -23,33 +15,42 @@ public class FriendController {
     @Autowired
     private FriendService friendService;
 
-    @GetMapping("/suggestions/{userId}")
-    public List<UserDTO> getSuggestions(@PathVariable Long userId) {
-        return friendService.getSuggestions(userId).stream().map(UserDTO::fromEntity).toList();
+    @GetMapping("/list/{userId}")
+    public ResponseEntity<List<User>> getFriends(@PathVariable Long userId) {
+        List<User> friends = friendService.getFriends(userId);
+        return ResponseEntity.ok(friends);
     }
 
-    @GetMapping("/requests/{userId}")
-    public List<FriendRequestDTO> getFriendRequests(@PathVariable Long userId) {
-        return friendService.getFriendRequests(userId).stream().map(FriendRequestDTO::fromEntity).toList();
+    @GetMapping("/suggestions/{userId}")
+    public ResponseEntity<List<User>> getFriendSuggestions(@PathVariable Long userId) {
+        List<User> suggestions = friendService.getSuggestions(userId);
+        return ResponseEntity.ok(suggestions);
     }
 
     @PostMapping("/request")
-    public void sendFriendRequest(@RequestParam Long senderId, @RequestParam Long recipientId) {
+    public ResponseEntity<Void> sendFriendRequest(
+        @RequestParam Long senderId,
+        @RequestParam Long recipientId
+    ) {
         friendService.sendFriendRequest(senderId, recipientId);
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/accept")
-    public void acceptFriendRequest(@RequestParam Long requestId) {
+    @PostMapping("/accept/{requestId}")
+    public ResponseEntity<Void> acceptFriendRequest(@PathVariable Long requestId) {
         friendService.acceptFriendRequest(requestId);
-    }
-
-    @GetMapping("/list/{userId}")
-    public List<UserDTO> getFriends(@PathVariable Long userId) {
-        return friendService.getFriends(userId).stream().map(UserDTO::fromEntity).toList();
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/request/{requestId}")
-    public void deleteFriendRequest(@PathVariable Long requestId) {
+    public ResponseEntity<Void> deleteFriendRequest(@PathVariable Long requestId) {
         friendService.deleteFriendRequest(requestId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/pending/{userId}")
+    public ResponseEntity<List<FriendRequest>> getPendingRequests(@PathVariable Long userId) {
+        List<FriendRequest> requests = friendService.getFriendRequests(userId);
+        return ResponseEntity.ok(requests);
     }
 }

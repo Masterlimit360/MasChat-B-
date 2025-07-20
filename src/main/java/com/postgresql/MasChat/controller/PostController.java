@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,5 +59,11 @@ public class PostController {
     @PostMapping("/{postId}/comment")
     public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestParam Long userId, @RequestBody String text) {
         return ResponseEntity.ok(postService.addComment(postId, userId, text));
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId, @RequestParam Long userId) {
+        postService.deletePost(postId, userId);
+        return ResponseEntity.ok().build();
     }
 }
