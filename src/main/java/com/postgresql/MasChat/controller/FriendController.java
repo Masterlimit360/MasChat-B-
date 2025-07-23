@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.model.FriendRequest;
 import com.postgresql.MasChat.service.FriendService;
+import com.postgresql.MasChat.dto.FriendRequestDTO;
 
 import java.util.List;
 
@@ -49,8 +50,11 @@ public class FriendController {
     }
 
     @GetMapping("/pending/{userId}")
-    public ResponseEntity<List<FriendRequest>> getPendingRequests(@PathVariable Long userId) {
+    public ResponseEntity<List<FriendRequestDTO>> getPendingRequests(@PathVariable Long userId) {
         List<FriendRequest> requests = friendService.getFriendRequests(userId);
-        return ResponseEntity.ok(requests);
+        List<FriendRequestDTO> dtos = requests.stream()
+            .map(FriendRequestDTO::fromEntity)
+            .toList();
+        return ResponseEntity.ok(dtos);
     }
 }

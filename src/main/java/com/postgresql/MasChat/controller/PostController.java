@@ -17,6 +17,7 @@ import com.postgresql.MasChat.model.Comment;
 import com.postgresql.MasChat.model.Post;
 import com.postgresql.MasChat.dto.PostRequestDto;
 import com.postgresql.MasChat.dto.PostDTO;
+import com.postgresql.MasChat.dto.CommentDTO;
 import com.postgresql.MasChat.service.PostService;
 
 @RestController
@@ -65,5 +66,11 @@ public class PostController {
     public ResponseEntity<Void> deletePost(@PathVariable Long postId, @RequestParam Long userId) {
         postService.deletePost(postId, userId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<java.util.List<CommentDTO>> getComments(@PathVariable Long postId) {
+        java.util.List<CommentDTO> comments = postService.getComments(postId);
+        return ResponseEntity.ok(comments);
     }
 }

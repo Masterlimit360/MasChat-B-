@@ -2,6 +2,8 @@ package com.postgresql.MasChat.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "stories")
@@ -18,6 +20,14 @@ public class Story {
     private String caption;
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ManyToMany
+    @JoinTable(
+        name = "story_likes",
+        joinColumns = @JoinColumn(name = "story_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> likedBy = new HashSet<>();
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -32,4 +42,7 @@ public class Story {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Set<User> getLikedBy() { return likedBy; }
+    public void setLikedBy(Set<User> likedBy) { this.likedBy = likedBy; }
 } 

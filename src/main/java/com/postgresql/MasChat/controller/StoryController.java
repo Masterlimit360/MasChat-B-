@@ -25,6 +25,16 @@ public class StoryController {
         return StoryDTO.fromEntity(story);
     }
 
+    @PostMapping("/{storyId}/like")
+    public StoryDTO likeStory(@PathVariable Long storyId, @RequestParam Long userId) {
+        return StoryDTO.fromEntity(storyService.likeStory(storyId, userId));
+    }
+
+    @PostMapping("/{storyId}/unlike")
+    public StoryDTO unlikeStory(@PathVariable Long storyId, @RequestParam Long userId) {
+        return StoryDTO.fromEntity(storyService.unlikeStory(storyId, userId));
+    }
+
     @DeleteMapping("/{storyId}")
     public void deleteStory(@PathVariable Long storyId, @RequestParam Long userId) {
         storyService.deleteStory(storyId, userId);

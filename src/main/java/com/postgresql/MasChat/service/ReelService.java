@@ -1,4 +1,11 @@
+
 package com.postgresql.MasChat.service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.postgresql.MasChat.model.Reel;
 import com.postgresql.MasChat.model.ReelComment;
@@ -6,14 +13,13 @@ import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.repository.ReelCommentRepository;
 import com.postgresql.MasChat.repository.ReelRepository;
 import com.postgresql.MasChat.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class ReelService {
+
+    public Reel getReelById(Long reelId) {
+        return reelRepository.findById(reelId).orElseThrow();
+    }
     @Autowired
     private ReelRepository reelRepository;
     @Autowired
@@ -76,4 +82,4 @@ public class ReelService {
     public List<Reel> searchReels(String query) {
         return reelRepository.findByCaptionContainingIgnoreCase(query);
     }
-} 
+}

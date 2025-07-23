@@ -3,6 +3,7 @@ package com.postgresql.MasChat.service;
 import com.postgresql.MasChat.model.*;
 import com.postgresql.MasChat.repository.*;
 import com.postgresql.MasChat.dto.PostRequestDto;
+import com.postgresql.MasChat.dto.CommentDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -72,5 +73,15 @@ public class PostService {
             throw new RuntimeException("User not authorized to delete this post");
         }
         postRepository.delete(post);
+    }
+
+    public java.util.List<CommentDTO> getComments(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        java.util.List<Comment> comments = commentRepository.findByPost(post);
+        java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
+        for (Comment c : comments) {
+            dtos.add(CommentDTO.fromEntity(c));
+        }
+        return dtos;
     }
 }

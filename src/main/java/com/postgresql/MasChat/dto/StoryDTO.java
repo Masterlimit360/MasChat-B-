@@ -1,6 +1,10 @@
 package com.postgresql.MasChat.dto;
 
 import com.postgresql.MasChat.model.Story;
+import com.postgresql.MasChat.model.User;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class StoryDTO {
     private Long id;
@@ -10,6 +14,7 @@ public class StoryDTO {
     private String mediaUrl;
     private String caption;
     private String createdAt;
+    private List<Long> likedBy;
 
     public static StoryDTO fromEntity(Story story) {
         StoryDTO dto = new StoryDTO();
@@ -20,6 +25,7 @@ public class StoryDTO {
         dto.setMediaUrl(story.getMediaUrl());
         dto.setCaption(story.getCaption());
         dto.setCreatedAt(story.getCreatedAt().toString());
+        dto.setLikedBy(story.getLikedBy().stream().map(User::getId).collect(Collectors.toList()));
         return dto;
     }
 
@@ -37,4 +43,6 @@ public class StoryDTO {
     public void setCaption(String caption) { this.caption = caption; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public List<Long> getLikedBy() { return likedBy; }
+    public void setLikedBy(List<Long> likedBy) { this.likedBy = likedBy; }
 } 

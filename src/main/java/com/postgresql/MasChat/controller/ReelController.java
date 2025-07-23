@@ -1,3 +1,4 @@
+
 package com.postgresql.MasChat.controller;
 
 import com.postgresql.MasChat.dto.ReelDTO;
@@ -12,6 +13,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/reels")
 public class ReelController {
+
+    @GetMapping("/{reelId}")
+    public ReelDTO getReelById(@PathVariable Long reelId) {
+        Reel reel = reelService.getReelById(reelId);
+        return ReelDTO.fromEntity(reel);
+    }
     @Autowired
     private ReelService reelService;
 

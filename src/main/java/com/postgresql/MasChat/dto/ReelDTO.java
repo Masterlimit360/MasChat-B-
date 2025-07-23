@@ -10,6 +10,7 @@ public class ReelDTO {
     private String mediaUrl;
     private String caption;
     private String createdAt;
+    private String videoUrl;
 
     public static ReelDTO fromEntity(Reel reel) {
         ReelDTO dto = new ReelDTO();
@@ -18,6 +19,7 @@ public class ReelDTO {
         dto.setUsername(reel.getUser().getUsername());
         dto.setProfilePicture(reel.getUser().getProfilePicture());
         dto.setMediaUrl(reel.getMediaUrl());
+        dto.setVideoUrl(reel.getMediaUrl());
         dto.setCaption(reel.getCaption());
         dto.setCreatedAt(reel.getCreatedAt().toString());
         return dto;
@@ -37,4 +39,6 @@ public class ReelDTO {
     public void setCaption(String caption) { this.caption = caption; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
 } 

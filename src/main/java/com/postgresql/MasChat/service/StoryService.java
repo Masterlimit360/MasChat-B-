@@ -37,4 +37,18 @@ public class StoryService {
         if (!story.getUser().getId().equals(userId)) throw new RuntimeException("Unauthorized");
         storyRepository.delete(story);
     }
+
+    public Story likeStory(Long storyId, Long userId) {
+        Story story = storyRepository.findById(storyId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
+        story.getLikedBy().add(user);
+        return storyRepository.save(story);
+    }
+
+    public Story unlikeStory(Long storyId, Long userId) {
+        Story story = storyRepository.findById(storyId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
+        story.getLikedBy().remove(user);
+        return storyRepository.save(story);
+    }
 } 
