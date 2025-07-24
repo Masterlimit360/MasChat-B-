@@ -57,4 +57,10 @@ public class FriendController {
             .toList();
         return ResponseEntity.ok(dtos);
     }
+
+    @DeleteMapping("/remove")
+    public ResponseEntity<Void> unfriend(@RequestParam Long userId, @RequestParam Long friendId) {
+        friendService.unfriend(userId, friendId);
+        return ResponseEntity.ok().build();
+    }
 }

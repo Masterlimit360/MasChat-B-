@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,9 +52,13 @@ public class MessageService {
     public List<Message> getConversation(Long userId1, Long userId2) {
         User user1 = userRepository.findById(userId1).orElseThrow();
         User user2 = userRepository.findById(userId2).orElseThrow();
-        return messageRepository.findBySenderAndRecipientOrSenderAndRecipientOrderBySentAt(
+        List<Message> messages = messageRepository.findBySenderAndRecipientOrSenderAndRecipientOrderBySentAt(
             user1, user2, user2, user1
         );
+        // Deduplicate by id
+        LinkedHashMap<Long, Message> unique = new LinkedHashMap<>();
+        for (Message m : messages) unique.put(m.getId(), m);
+        return new ArrayList<>(unique.values());
     }
 
     public List<RecentChatDTO> getRecentChats(Long userId) {

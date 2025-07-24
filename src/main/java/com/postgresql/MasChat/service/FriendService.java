@@ -105,4 +105,14 @@ public class FriendService {
     public void deleteFriendRequest(Long requestId) {
         friendRequestRepository.deleteById(requestId);
     }
+
+    public void unfriend(Long userId, Long friendId) {
+        User user = userRepository.findById(userId).orElse(null);
+        User friend = userRepository.findById(friendId).orElse(null);
+        if (user == null || friend == null) return;
+        user.getFriends().removeIf(f -> f.getId().equals(friendId));
+        friend.getFriends().removeIf(f -> f.getId().equals(userId));
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
 }

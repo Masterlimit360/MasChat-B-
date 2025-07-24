@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -172,6 +173,12 @@ public User updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
 
         return userRepository.save(user);
     }).orElseThrow(() -> new RuntimeException("User not found with id " + id));
+}
+
+@DeleteMapping("/{userId}")
+public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+    userRepository.deleteById(userId);
+    return ResponseEntity.ok().build();
 }
 
 @GetMapping("/{userId}/friends")
