@@ -1,3 +1,4 @@
+// WebSocketConfig: WebSocketEventListener is required for user online/offline status
 package com.postgresql.MasChat.config;
 
 import org.springframework.context.annotation.Configuration;

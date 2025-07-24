@@ -69,7 +69,7 @@ public class User {
     private Boolean verified = false;
 
     @Column(name = "is_online")
-    private Boolean isOnline = false;
+    private Boolean isOnline = false; // Used for WebSocket online status
 
     @ManyToMany
     @JoinTable(
@@ -221,11 +221,11 @@ public class User {
         this.verified = verified;
     }
 
-    public Boolean getOnline() {
+    public Boolean getOnline() { // Used for WebSocket online status
         return isOnline;
     }
 
-    public void setOnline(Boolean online) {
+    public void setOnline(Boolean online) { // Used for WebSocket online status
         isOnline = online;
     }
 

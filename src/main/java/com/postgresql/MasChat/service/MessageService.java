@@ -12,6 +12,8 @@ import com.postgresql.MasChat.model.Message;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.repository.MessageRepository;
 import com.postgresql.MasChat.repository.UserRepository;
+import com.postgresql.MasChat.repository.ChatRepository;
+import com.postgresql.MasChat.model.Chat;
 import com.postgresql.MasChat.dto.RecentChatDTO;
 
 @Service
@@ -20,15 +22,28 @@ public class MessageService {
     private MessageRepository messageRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ChatRepository chatRepository;
 
     public Message sendMessage(Long senderId, Long recipientId, String content) {
         User sender = userRepository.findById(senderId).orElseThrow();
         User recipient = userRepository.findById(recipientId).orElseThrow();
+
+        // Find or create chat
+        Chat chat = chatRepository.findByUser1AndUser2OrUser2AndUser1(sender, recipient, sender, recipient)
+            .orElseGet(() -> {
+                Chat newChat = new Chat();
+                newChat.setUser1(sender);
+                newChat.setUser2(recipient);
+                return chatRepository.save(newChat);
+            });
+
         Message message = new Message();
         message.setSender(sender);
         message.setRecipient(recipient);
         message.setContent(content);
         message.setSentAt(LocalDateTime.now());
+        message.setChat(chat);
         return messageRepository.save(message);
     }
 

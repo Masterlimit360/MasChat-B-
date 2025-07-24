@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
@@ -21,13 +22,15 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
-    @JsonBackReference
     private User sender;
 
     @ManyToOne
     @JoinColumn(name = "recipient_id")
-    @JsonBackReference
     private User recipient;
+
+    @ManyToOne
+    @JoinColumn(name = "chat_id", nullable = false)
+    private Chat chat;
 
     @Column(nullable = false, length = 1000)
     private String content;
@@ -45,6 +48,14 @@ public class Message {
 
     @Column(nullable = false)
     private boolean read = false;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
+    }
 
     // Getters and setters...
     
@@ -87,4 +98,9 @@ public class Message {
     public void setRead(boolean read) {
         this.read = read;
     }
+
+    public Chat getChat() { return chat; }
+    public void setChat(Chat chat) { this.chat = chat; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
 }

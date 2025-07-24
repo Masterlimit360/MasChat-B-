@@ -1,6 +1,7 @@
 package com.postgresql.MasChat.dto;
 
 public class ChatMessage {
+    // senderId and recipientId should be user IDs (as strings) for WebSocket messaging
     private String senderId;
     private String recipientId;
     private String content;

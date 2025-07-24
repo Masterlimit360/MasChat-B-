@@ -13,5 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     List<User> findByUsernameContainingIgnoreCase(String username);
+    // findById is inherited from JpaRepository and used for online status updates in WebSocketEventListener
 }
 

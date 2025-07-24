@@ -19,6 +19,11 @@ public class StoryController {
         return storyService.getRecentStories().stream().map(StoryDTO::fromEntity).collect(Collectors.toList());
     }
 
+    @GetMapping("/user/{userId}")
+    public List<StoryDTO> getStoriesByUser(@PathVariable Long userId) {
+        return storyService.getStoriesByUser(userId).stream().map(StoryDTO::fromEntity).collect(Collectors.toList());
+    }
+
     @PostMapping("/create")
     public StoryDTO createStory(@RequestBody StoryCreateRequest req) {
         Story story = storyService.createStory(req.getUserId(), req.getMediaUrl(), req.getCaption());
