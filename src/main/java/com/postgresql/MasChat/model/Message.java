@@ -35,12 +35,23 @@ public class Message {
     @Column(nullable = false, length = 1000)
     private String content;
 
+    @Column(length = 500)
+    private String image;
+
     public String getContent() {
         return content;
     }
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
     @Column(nullable = false)

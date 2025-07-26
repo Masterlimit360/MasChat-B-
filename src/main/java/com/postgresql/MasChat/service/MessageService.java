@@ -49,6 +49,40 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
+    public Message sendImageMessage(Long senderId, Long recipientId, String imageUrl, String content) {
+        try {
+            // Validate inputs
+            if (senderId == null || recipientId == null || imageUrl == null || imageUrl.trim().isEmpty()) {
+                throw new IllegalArgumentException("Invalid parameters: senderId=" + senderId + ", recipientId=" + recipientId + ", imageUrl=" + imageUrl);
+            }
+            
+            User sender = userRepository.findById(senderId).orElseThrow();
+            User recipient = userRepository.findById(recipientId).orElseThrow();
+
+            // Find or create chat
+            Chat chat = chatRepository.findByUser1AndUser2OrUser2AndUser1(sender, recipient, sender, recipient)
+                .orElseGet(() -> {
+                    Chat newChat = new Chat();
+                    newChat.setUser1(sender);
+                    newChat.setUser2(recipient);
+                    return chatRepository.save(newChat);
+                });
+
+            Message message = new Message();
+            message.setSender(sender);
+            message.setRecipient(recipient);
+            message.setContent(content);
+            message.setImage(imageUrl); // Set the image URL
+            message.setSentAt(LocalDateTime.now());
+            message.setChat(chat);
+            return messageRepository.save(message);
+        } catch (Exception e) {
+            System.err.println("Error in sendImageMessage service: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
     public List<Message> getConversation(Long userId1, Long userId2) {
         User user1 = userRepository.findById(userId1).orElseThrow();
         User user2 = userRepository.findById(userId2).orElseThrow();

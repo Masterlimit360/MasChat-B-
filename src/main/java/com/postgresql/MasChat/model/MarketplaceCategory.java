@@ -14,6 +14,18 @@ public class MarketplaceCategory {
 
     private String icon; // Optional: icon name or URL
 
+    // Constructors
+    public MarketplaceCategory() {}
+
+    public MarketplaceCategory(String name) {
+        this.name = name;
+    }
+
+    public MarketplaceCategory(String name, String icon) {
+        this.name = name;
+        this.icon = icon;
+    }
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

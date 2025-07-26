@@ -11,20 +11,14 @@ public class MarketplaceOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id")
-    @JsonIgnore
-    private MarketplaceItem item;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "buyer_id")
-    @JsonIgnore
-    private User buyer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_id")
-    @JsonIgnore
-    private User seller;
+    // Direct IDs for easier serialization
+    private Long itemId;
+    private Long buyerId;
+    private Long sellerId;
+    private Integer quantity;
+    private Double totalAmount;
+    private String shippingAddress;
+    private String phoneNumber;
 
     private Double price;
     private String status; // pending, paid, shipped, completed, cancelled
@@ -37,12 +31,20 @@ public class MarketplaceOrder {
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public MarketplaceItem getItem() { return item; }
-    public void setItem(MarketplaceItem item) { this.item = item; }
-    public User getBuyer() { return buyer; }
-    public void setBuyer(User buyer) { this.buyer = buyer; }
-    public User getSeller() { return seller; }
-    public void setSeller(User seller) { this.seller = seller; }
+    public Long getItemId() { return itemId; }
+    public void setItemId(Long itemId) { this.itemId = itemId; }
+    public Long getBuyerId() { return buyerId; }
+    public void setBuyerId(Long buyerId) { this.buyerId = buyerId; }
+    public Long getSellerId() { return sellerId; }
+    public void setSellerId(Long sellerId) { this.sellerId = sellerId; }
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public Double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+    public String getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
     public String getStatus() { return status; }

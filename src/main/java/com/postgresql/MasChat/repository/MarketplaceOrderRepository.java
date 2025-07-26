@@ -8,4 +8,5 @@ public interface MarketplaceOrderRepository extends JpaRepository<MarketplaceOrd
     List<MarketplaceOrder> findByBuyerId(Long buyerId);
     List<MarketplaceOrder> findBySellerId(Long sellerId);
     List<MarketplaceOrder> findByItemId(Long itemId);
+    List<MarketplaceOrder> findByBuyerIdOrSellerId(Long buyerId, Long sellerId);
 } 
