@@ -123,7 +123,7 @@ public class MarketplaceController {
         String fileName = type + "_" + UUID.randomUUID() + fileExtension;
         Path filePath = Paths.get(uploadDir + fileName);
         Files.write(filePath, file.getBytes());
-        return "http://10.94.219.125:8080/uploads/" + fileName;
+        return "http://10.132.74.85:8080/uploads/" + fileName;
     }
 
     @PutMapping("/items/{id}")

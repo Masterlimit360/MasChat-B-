@@ -1,47 +1,19 @@
-package com.postgresql.MasChat.model;
+package com.postgresql.MasChat.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
-@Entity
-@Table(name = "groups")
-public class Group {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class GroupDTO {
     private Long id;
-
-    @Column(nullable = false, unique = true)
     private String name;
-
     private String description;
-
-    @Column(nullable = false)
-    private boolean isPrivate = false;
-
-    @Column(nullable = false)
-    private String category = "General";
-
-    @Column(nullable = false)
-    private String imageUrl = "https://i.imgur.com/default-group.png";
-
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
-
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<GroupMember> groupMembers;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @Column(nullable = false)
-    private boolean isActive = true;
+    private boolean isPrivate;
+    private String category;
+    private String imageUrl;
+    private Long createdBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private boolean isActive;
+    private Long memberCount;
 
     // Getters and setters
     public Long getId() {
@@ -92,20 +64,12 @@ public class Group {
         this.imageUrl = imageUrl;
     }
 
-    public User getCreatedBy() {
+    public Long getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
-    }
-
-    public List<GroupMember> getGroupMembers() {
-        return groupMembers;
-    }
-
-    public void setGroupMembers(List<GroupMember> groupMembers) {
-        this.groupMembers = groupMembers;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -131,4 +95,12 @@ public class Group {
     public void setActive(boolean active) {
         isActive = active;
     }
-}
+
+    public Long getMemberCount() {
+        return memberCount;
+    }
+
+    public void setMemberCount(Long memberCount) {
+        this.memberCount = memberCount;
+    }
+} 

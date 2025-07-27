@@ -1,12 +1,15 @@
 package com.postgresql.MasChat.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
-import io.jsonwebtoken.SignatureAlgorithm;
+import java.nio.charset.StandardCharsets;
+import javax.crypto.SecretKey;
 import io.jsonwebtoken.JwtException;
+import jakarta.annotation.PostConstruct;
 
 
 @Component
@@ -17,6 +20,39 @@ public class JwtTokenProvider {
 
     @Value("${jwt.expiration}")
     private Long expiration;
+    
+    @PostConstruct
+    public void validateConfiguration() {
+        System.out.println("=== JWT Configuration Validation ===");
+        System.out.println("Secret length: " + (secret != null ? secret.length() : 0) + " characters");
+        System.out.println("Expiration: " + expiration + " ms");
+        
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters long. Current length: " + (secret != null ? secret.length() : 0));
+        }
+        
+        try {
+            SecretKey testKey = getSigningKey();
+            System.out.println("JWT configuration is valid");
+        } catch (Exception e) {
+            System.err.println("JWT configuration validation failed: " + e.getMessage());
+            throw e;
+        }
+    }
+    
+    private SecretKey getSigningKey() {
+        try {
+            if (secret == null || secret.length() < 32) {
+                throw new IllegalArgumentException("JWT secret must be at least 32 characters long. Current length: " + (secret != null ? secret.length() : 0));
+            }
+            byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+            System.out.println("Secret key length: " + keyBytes.length + " bytes (" + (keyBytes.length * 8) + " bits)");
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (Exception e) {
+            System.err.println("Error creating signing key: " + e.getMessage());
+            throw e;
+        }
+    }
 
     public String generateToken(String username) {
         System.out.println("=== Generating JWT Token ===");
@@ -28,13 +64,18 @@ public class JwtTokenProvider {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
         try {
-            return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
         } catch (Exception e) {
             System.out.println("Error extracting username from token: " + e.getMessage());
             return null;
@@ -45,7 +86,10 @@ public class JwtTokenProvider {
         try {
             System.out.println("Validating token with secret: " + secret.substring(0, Math.min(10, secret.length())) + "...");
             System.out.println("Token to validate: " + token.substring(0, Math.min(20, token.length())) + "...");
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token);
             System.out.println("Token validation successful");
             return true;
         } catch (JwtException e) {

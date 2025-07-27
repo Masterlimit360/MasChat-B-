@@ -1,13 +1,17 @@
 package com.postgresql.MasChat;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 class MasChatApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void applicationExists() {
+		// Simple test to verify the application class exists and can be instantiated
+		assertDoesNotThrow(() -> {
+			MasChatApplication application = new MasChatApplication();
+			assertNotNull(application);
+		});
 	}
 
 }

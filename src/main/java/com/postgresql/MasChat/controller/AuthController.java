@@ -75,6 +75,10 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Registration error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Registration failed. Please try again."));
         }
     }
 
@@ -114,6 +118,8 @@ public class AuthController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("Login error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
         }
     }

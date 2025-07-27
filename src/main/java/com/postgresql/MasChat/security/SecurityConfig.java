@@ -30,9 +30,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()) // Allow all requests
-            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .requestMatchers("/", "/health").permitAll()
+                .requestMatchers("/api/auth/**", "/api/auth/test", "/api/auth/test-token").permitAll()
+                .requestMatchers("/api/test/**").permitAll()
+                .requestMatchers("/ws-chat/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .anyRequest().authenticated())
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

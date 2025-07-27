@@ -47,7 +47,7 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "details_id", referencedColumnName = "id")
     @JsonManagedReference
-    private UserDetails details;
+    private UserProfile details;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -68,8 +68,8 @@ public class User {
     @Column(name = "verified")
     private Boolean verified = false;
 
-    @Column(name = "is_online")
-    private Boolean isOnline = false; // Used for WebSocket online status
+    @Column(name = "online")
+    private Boolean online = false; // Used for WebSocket online status
 
     @ManyToMany
     @JoinTable(
@@ -170,11 +170,11 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public UserDetails getDetails() {
+    public UserProfile getDetails() {
         return details;
     }
 
-    public void setDetails(UserDetails details) {
+    public void setDetails(UserProfile details) {
         this.details = details;
         if (details != null) {
             details.setUser(this); // ensure bidirectional consistency
@@ -222,11 +222,11 @@ public class User {
     }
 
     public Boolean getOnline() { // Used for WebSocket online status
-        return isOnline;
+        return online;
     }
 
     public void setOnline(Boolean online) { // Used for WebSocket online status
-        isOnline = online;
+        this.online = online;
     }
 
     public List<User> getFriends() {

@@ -5,13 +5,12 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "user_details")
-public class UserDetails {
+public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OneToOne(mappedBy = "details")
     @JsonBackReference
     private User user;
 
@@ -51,7 +50,7 @@ public class UserDetails {
     @Column(name = "following_count")
     private Integer followingCount = 0;
 
-    public UserDetails() {}
+    public UserProfile() {}
 
     // Getters and Setters
 

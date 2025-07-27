@@ -13,7 +13,7 @@ import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.RegisterRequest;
 import com.postgresql.MasChat.exception.ResourceNotFoundException;
 import com.postgresql.MasChat.model.User;
-import com.postgresql.MasChat.model.UserDetails;
+import com.postgresql.MasChat.model.UserProfile;
 import com.postgresql.MasChat.repository.UserRepository;
 
 @Service
@@ -62,9 +62,9 @@ public User updateProfile(Long userId, ProfileUpdateRequest request) {
 
     // Update details
     if (request.getDetails() != null) {
-        UserDetails details = user.getDetails();
+        UserProfile details = user.getDetails();
         if (details == null) {
-            details = new UserDetails();
+            details = new UserProfile();
             details.setUser(user);
         }
 
@@ -108,7 +108,7 @@ public User updateProfile(Long userId, ProfileUpdateRequest request) {
     public User updateAvatar(Long userId, String imageUrl, boolean showAvatar) {
         User user = this.findById(userId);
         if (user.getDetails() == null) {
-            user.setDetails(new UserDetails());
+            user.setDetails(new UserProfile());
         }
         user.getDetails().setAvatar(imageUrl);
         user.getDetails().setShowAvatar(showAvatar);

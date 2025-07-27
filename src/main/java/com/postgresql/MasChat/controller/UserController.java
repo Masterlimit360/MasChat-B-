@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.UserDTO;
 import com.postgresql.MasChat.model.User;
-import com.postgresql.MasChat.model.UserDetails;
+import com.postgresql.MasChat.model.UserProfile;
 import com.postgresql.MasChat.repository.UserRepository;
 import com.postgresql.MasChat.service.UserService;
 
@@ -139,7 +139,7 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Files.write(filePath, file.getBytes());
         
         // Return the full URL for the image
-        return "http://10.94.219.125:8080/uploads/" + fileName;
+        return "http://10.132.74.85:8080/uploads/" + fileName;
     }
 
     @PutMapping("/{id}")
@@ -157,7 +157,7 @@ public User updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
             if (user.getDetails() == null) {
                 user.setDetails(updatedUser.getDetails());
             } else {
-                UserDetails details = user.getDetails();
+                UserProfile details = user.getDetails();
                 details.setProfileType(updatedUser.getDetails().getProfileType());
                 details.setWorksAt1(updatedUser.getDetails().getWorksAt1());
                 details.setWorksAt2(updatedUser.getDetails().getWorksAt2());
