@@ -1,259 +1,282 @@
 package com.postgresql.MasChat.dto;
 
 import com.postgresql.MasChat.model.MassCoinTransaction;
+import com.postgresql.MasChat.model.MassCoinTransferRequest;
 import com.postgresql.MasChat.model.UserWallet;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class MassCoinDTO {
-    
-    // Wallet DTOs
+
     public static class WalletInfo {
+        private Long id;
         private Long userId;
         private String walletAddress;
         private BigDecimal balance;
         private BigDecimal stakedAmount;
         private BigDecimal totalEarned;
         private BigDecimal totalSpent;
-        private UserWallet.WalletType walletType;
-        private Boolean isActive;
+        private String walletType;
+        private boolean isActive;
         private LocalDateTime lastSyncAt;
-        
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
         public WalletInfo() {}
-        
+
         public WalletInfo(UserWallet wallet) {
+            this.id = wallet.getId();
             this.userId = wallet.getUser().getId();
             this.walletAddress = wallet.getWalletAddress();
             this.balance = wallet.getBalance();
             this.stakedAmount = wallet.getStakedAmount();
             this.totalEarned = wallet.getTotalEarned();
             this.totalSpent = wallet.getTotalSpent();
-            this.walletType = wallet.getWalletType();
+            this.walletType = wallet.getWalletType().name();
             this.isActive = wallet.getIsActive();
             this.lastSyncAt = wallet.getLastSyncAt();
+            this.createdAt = wallet.getCreatedAt();
+            this.updatedAt = wallet.getUpdatedAt();
         }
-        
+
         // Getters and Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
         public Long getUserId() { return userId; }
         public void setUserId(Long userId) { this.userId = userId; }
-        
         public String getWalletAddress() { return walletAddress; }
         public void setWalletAddress(String walletAddress) { this.walletAddress = walletAddress; }
-        
         public BigDecimal getBalance() { return balance; }
         public void setBalance(BigDecimal balance) { this.balance = balance; }
-        
         public BigDecimal getStakedAmount() { return stakedAmount; }
         public void setStakedAmount(BigDecimal stakedAmount) { this.stakedAmount = stakedAmount; }
-        
         public BigDecimal getTotalEarned() { return totalEarned; }
         public void setTotalEarned(BigDecimal totalEarned) { this.totalEarned = totalEarned; }
-        
         public BigDecimal getTotalSpent() { return totalSpent; }
         public void setTotalSpent(BigDecimal totalSpent) { this.totalSpent = totalSpent; }
-        
-        public UserWallet.WalletType getWalletType() { return walletType; }
-        public void setWalletType(UserWallet.WalletType walletType) { this.walletType = walletType; }
-        
-        public Boolean getIsActive() { return isActive; }
-        public void setIsActive(Boolean isActive) { this.isActive = isActive; }
-        
+        public String getWalletType() { return walletType; }
+        public void setWalletType(String walletType) { this.walletType = walletType; }
+        public boolean isActive() { return isActive; }
+        public void setActive(boolean active) { isActive = active; }
         public LocalDateTime getLastSyncAt() { return lastSyncAt; }
         public void setLastSyncAt(LocalDateTime lastSyncAt) { this.lastSyncAt = lastSyncAt; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+        public LocalDateTime getUpdatedAt() { return updatedAt; }
+        public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     }
-    
-    // Transaction DTOs
+
+    public static class TransferRequest {
+        private Long recipientId;
+        private BigDecimal amount;
+        private String message;
+        private MassCoinTransferRequest.ContextType contextType;
+        private String contextId;
+        private MassCoinTransaction.TransactionType transactionType;
+
+        // Getters and Setters
+        public Long getRecipientId() { return recipientId; }
+        public void setRecipientId(Long recipientId) { this.recipientId = recipientId; }
+        public BigDecimal getAmount() { return amount; }
+        public void setAmount(BigDecimal amount) { this.amount = amount; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public MassCoinTransferRequest.ContextType getContextType() { return contextType; }
+        public void setContextType(MassCoinTransferRequest.ContextType contextType) { this.contextType = contextType; }
+        public String getContextId() { return contextId; }
+        public void setContextId(String contextId) { this.contextId = contextId; }
+        public MassCoinTransaction.TransactionType getTransactionType() { return transactionType; }
+        public void setTransactionType(MassCoinTransaction.TransactionType transactionType) { this.transactionType = transactionType; }
+    }
+
+    public static class TransferRequestInfo {
+        private Long id;
+        private Long senderId;
+        private String senderName;
+        private String senderAvatar;
+        private Long recipientId;
+        private String recipientName;
+        private String recipientAvatar;
+        private BigDecimal amount;
+        private String message;
+        private MassCoinTransferRequest.ContextType contextType;
+        private String contextId;
+        private MassCoinTransferRequest.RequestStatus status;
+        private LocalDateTime createdAt;
+        private LocalDateTime expiresAt;
+
+        public TransferRequestInfo() {}
+
+        public TransferRequestInfo(MassCoinTransferRequest request) {
+            this.id = request.getId();
+            this.senderId = request.getSender().getId();
+            this.senderName = request.getSender().getFullName();
+            this.senderAvatar = request.getSender().getProfilePicture();
+            this.recipientId = request.getRecipient().getId();
+            this.recipientName = request.getRecipient().getFullName();
+            this.recipientAvatar = request.getRecipient().getProfilePicture();
+            this.amount = request.getAmount();
+            this.message = request.getMessage();
+            this.contextType = request.getContextType();
+            this.contextId = request.getContextId();
+            this.status = request.getStatus();
+            this.createdAt = request.getCreatedAt();
+            this.expiresAt = request.getExpiresAt();
+        }
+
+        // Getters and Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        public Long getSenderId() { return senderId; }
+        public void setSenderId(Long senderId) { this.senderId = senderId; }
+        public String getSenderName() { return senderName; }
+        public void setSenderName(String senderName) { this.senderName = senderName; }
+        public String getSenderAvatar() { return senderAvatar; }
+        public void setSenderAvatar(String senderAvatar) { this.senderAvatar = senderAvatar; }
+        public Long getRecipientId() { return recipientId; }
+        public void setRecipientId(Long recipientId) { this.recipientId = recipientId; }
+        public String getRecipientName() { return recipientName; }
+        public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
+        public String getRecipientAvatar() { return recipientAvatar; }
+        public void setRecipientAvatar(String recipientAvatar) { this.recipientAvatar = recipientAvatar; }
+        public BigDecimal getAmount() { return amount; }
+        public void setAmount(BigDecimal amount) { this.amount = amount; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public MassCoinTransferRequest.ContextType getContextType() { return contextType; }
+        public void setContextType(MassCoinTransferRequest.ContextType contextType) { this.contextType = contextType; }
+        public String getContextId() { return contextId; }
+        public void setContextId(String contextId) { this.contextId = contextId; }
+        public MassCoinTransferRequest.RequestStatus getStatus() { return status; }
+        public void setStatus(MassCoinTransferRequest.RequestStatus status) { this.status = status; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+        public LocalDateTime getExpiresAt() { return expiresAt; }
+        public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    }
+
     public static class TransactionInfo {
         private Long id;
         private Long senderId;
         private String senderName;
-        private String senderUsername;
+        private String senderAvatar;
         private Long recipientId;
         private String recipientName;
-        private String recipientUsername;
+        private String recipientAvatar;
         private BigDecimal amount;
         private String transactionHash;
         private MassCoinTransaction.TransactionType transactionType;
         private MassCoinTransaction.TransactionStatus status;
         private BigDecimal gasFee;
         private BigDecimal usdValue;
-        private LocalDateTime createdAt;
         private String description;
-        private Long blockNumber;
-        
+        private LocalDateTime createdAt;
+
         public TransactionInfo() {}
-        
+
         public TransactionInfo(MassCoinTransaction transaction) {
             this.id = transaction.getId();
-            this.senderId = transaction.getSender().getId();
-            this.senderName = transaction.getSender().getFullName();
-            this.senderUsername = transaction.getSender().getUsername();
+            this.senderId = transaction.getSender() != null ? transaction.getSender().getId() : null;
+            this.senderName = transaction.getSender() != null ? transaction.getSender().getFullName() : "System";
+            this.senderAvatar = transaction.getSender() != null ? transaction.getSender().getProfilePicture() : null;
             this.recipientId = transaction.getRecipient().getId();
             this.recipientName = transaction.getRecipient().getFullName();
-            this.recipientUsername = transaction.getRecipient().getUsername();
+            this.recipientAvatar = transaction.getRecipient().getProfilePicture();
             this.amount = transaction.getAmount();
             this.transactionHash = transaction.getTransactionHash();
             this.transactionType = transaction.getTransactionType();
             this.status = transaction.getStatus();
             this.gasFee = transaction.getGasFee();
             this.usdValue = transaction.getUsdValue();
-            this.createdAt = transaction.getCreatedAt();
             this.description = transaction.getDescription();
-            this.blockNumber = transaction.getBlockNumber();
+            this.createdAt = transaction.getCreatedAt();
         }
-        
+
         // Getters and Setters
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
-        
         public Long getSenderId() { return senderId; }
         public void setSenderId(Long senderId) { this.senderId = senderId; }
-        
         public String getSenderName() { return senderName; }
         public void setSenderName(String senderName) { this.senderName = senderName; }
-        
-        public String getSenderUsername() { return senderUsername; }
-        public void setSenderUsername(String senderUsername) { this.senderUsername = senderUsername; }
-        
+        public String getSenderAvatar() { return senderAvatar; }
+        public void setSenderAvatar(String senderAvatar) { this.senderAvatar = senderAvatar; }
         public Long getRecipientId() { return recipientId; }
         public void setRecipientId(Long recipientId) { this.recipientId = recipientId; }
-        
         public String getRecipientName() { return recipientName; }
         public void setRecipientName(String recipientName) { this.recipientName = recipientName; }
-        
-        public String getRecipientUsername() { return recipientUsername; }
-        public void setRecipientUsername(String recipientUsername) { this.recipientUsername = recipientUsername; }
-        
+        public String getRecipientAvatar() { return recipientAvatar; }
+        public void setRecipientAvatar(String recipientAvatar) { this.recipientAvatar = recipientAvatar; }
         public BigDecimal getAmount() { return amount; }
         public void setAmount(BigDecimal amount) { this.amount = amount; }
-        
         public String getTransactionHash() { return transactionHash; }
         public void setTransactionHash(String transactionHash) { this.transactionHash = transactionHash; }
-        
         public MassCoinTransaction.TransactionType getTransactionType() { return transactionType; }
         public void setTransactionType(MassCoinTransaction.TransactionType transactionType) { this.transactionType = transactionType; }
-        
         public MassCoinTransaction.TransactionStatus getStatus() { return status; }
         public void setStatus(MassCoinTransaction.TransactionStatus status) { this.status = status; }
-        
         public BigDecimal getGasFee() { return gasFee; }
         public void setGasFee(BigDecimal gasFee) { this.gasFee = gasFee; }
-        
         public BigDecimal getUsdValue() { return usdValue; }
         public void setUsdValue(BigDecimal usdValue) { this.usdValue = usdValue; }
-        
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
         public LocalDateTime getCreatedAt() { return createdAt; }
         public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-        
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        
-        public Long getBlockNumber() { return blockNumber; }
-        public void setBlockNumber(Long blockNumber) { this.blockNumber = blockNumber; }
     }
-    
-    // Transfer Request DTO
-    public static class TransferRequest {
-        private String recipientId;
-        private BigDecimal amount;
-        private String description;
-        private MassCoinTransaction.TransactionType transactionType;
-        
-        public TransferRequest() {}
-        
-        // Getters and Setters
-        public String getRecipientId() { return recipientId; }
-        public void setRecipientId(String recipientId) { this.recipientId = recipientId; }
-        
-        public BigDecimal getAmount() { return amount; }
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
-        
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        
-        public MassCoinTransaction.TransactionType getTransactionType() { return transactionType; }
-        public void setTransactionType(MassCoinTransaction.TransactionType transactionType) { this.transactionType = transactionType; }
-    }
-    
-    // Staking DTOs
-    public static class StakingRequest {
-        private BigDecimal amount;
-        private String action; // "stake" or "unstake"
-        
-        public StakingRequest() {}
-        
-        // Getters and Setters
-        public BigDecimal getAmount() { return amount; }
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
-        
-        public String getAction() { return action; }
-        public void setAction(String action) { this.action = action; }
-    }
-    
-    // Platform Statistics DTO
-    public static class PlatformStats {
-        private BigDecimal totalBalance;
-        private BigDecimal totalStaked;
-        private BigDecimal totalVolume;
-        private Long totalWallets;
+
+    public static class UserStats {
         private Long totalTransactions;
-        private BigDecimal massPrice;
-        
-        public PlatformStats() {}
-        
+        private BigDecimal totalVolume;
+        private BigDecimal averageTransactionAmount;
+        private Long totalTipsReceived;
+        private BigDecimal totalTipsAmount;
+        private Long totalTipsSent;
+        private BigDecimal totalTipsSentAmount;
+
+        public UserStats() {}
+
         // Getters and Setters
-        public BigDecimal getTotalBalance() { return totalBalance; }
-        public void setTotalBalance(BigDecimal totalBalance) { this.totalBalance = totalBalance; }
-        
-        public BigDecimal getTotalStaked() { return totalStaked; }
-        public void setTotalStaked(BigDecimal totalStaked) { this.totalStaked = totalStaked; }
-        
-        public BigDecimal getTotalVolume() { return totalVolume; }
-        public void setTotalVolume(BigDecimal totalVolume) { this.totalVolume = totalVolume; }
-        
-        public Long getTotalWallets() { return totalWallets; }
-        public void setTotalWallets(Long totalWallets) { this.totalWallets = totalWallets; }
-        
         public Long getTotalTransactions() { return totalTransactions; }
         public void setTotalTransactions(Long totalTransactions) { this.totalTransactions = totalTransactions; }
-        
-        public BigDecimal getMassPrice() { return massPrice; }
-        public void setMassPrice(BigDecimal massPrice) { this.massPrice = massPrice; }
+        public BigDecimal getTotalVolume() { return totalVolume; }
+        public void setTotalVolume(BigDecimal totalVolume) { this.totalVolume = totalVolume; }
+        public BigDecimal getAverageTransactionAmount() { return averageTransactionAmount; }
+        public void setAverageTransactionAmount(BigDecimal averageTransactionAmount) { this.averageTransactionAmount = averageTransactionAmount; }
+        public Long getTotalTipsReceived() { return totalTipsReceived; }
+        public void setTotalTipsReceived(Long totalTipsReceived) { this.totalTipsReceived = totalTipsReceived; }
+        public BigDecimal getTotalTipsAmount() { return totalTipsAmount; }
+        public void setTotalTipsAmount(BigDecimal totalTipsAmount) { this.totalTipsAmount = totalTipsAmount; }
+        public Long getTotalTipsSent() { return totalTipsSent; }
+        public void setTotalTipsSent(Long totalTipsSent) { this.totalTipsSent = totalTipsSent; }
+        public BigDecimal getTotalTipsSentAmount() { return totalTipsSentAmount; }
+        public void setTotalTipsSentAmount(BigDecimal totalTipsSentAmount) { this.totalTipsSentAmount = totalTipsSentAmount; }
     }
-    
-    // User Statistics DTO
-    public static class UserStats {
-        private BigDecimal balance;
-        private BigDecimal stakedAmount;
-        private BigDecimal totalEarned;
-        private BigDecimal totalSpent;
-        private Long transactionCount;
-        private BigDecimal totalSent;
-        private BigDecimal totalReceived;
-        
-        public UserStats() {}
-        
+
+    public static class PlatformStats {
+        private Long totalUsers;
+        private Long totalWallets;
+        private BigDecimal totalCirculatingSupply;
+        private BigDecimal totalStakedAmount;
+        private Long totalTransactions;
+        private BigDecimal totalTransactionVolume;
+
+        public PlatformStats() {}
+
         // Getters and Setters
-        public BigDecimal getBalance() { return balance; }
-        public void setBalance(BigDecimal balance) { this.balance = balance; }
-        
-        public BigDecimal getStakedAmount() { return stakedAmount; }
-        public void setStakedAmount(BigDecimal stakedAmount) { this.stakedAmount = stakedAmount; }
-        
-        public BigDecimal getTotalEarned() { return totalEarned; }
-        public void setTotalEarned(BigDecimal totalEarned) { this.totalEarned = totalEarned; }
-        
-        public BigDecimal getTotalSpent() { return totalSpent; }
-        public void setTotalSpent(BigDecimal totalSpent) { this.totalSpent = totalSpent; }
-        
-        public Long getTransactionCount() { return transactionCount; }
-        public void setTransactionCount(Long transactionCount) { this.transactionCount = transactionCount; }
-        
-        public BigDecimal getTotalSent() { return totalSent; }
-        public void setTotalSent(BigDecimal totalSent) { this.totalSent = totalSent; }
-        
-        public BigDecimal getTotalReceived() { return totalReceived; }
-        public void setTotalReceived(BigDecimal totalReceived) { this.totalReceived = totalReceived; }
+        public Long getTotalUsers() { return totalUsers; }
+        public void setTotalUsers(Long totalUsers) { this.totalUsers = totalUsers; }
+        public Long getTotalWallets() { return totalWallets; }
+        public void setTotalWallets(Long totalWallets) { this.totalWallets = totalWallets; }
+        public BigDecimal getTotalCirculatingSupply() { return totalCirculatingSupply; }
+        public void setTotalCirculatingSupply(BigDecimal totalCirculatingSupply) { this.totalCirculatingSupply = totalCirculatingSupply; }
+        public BigDecimal getTotalStakedAmount() { return totalStakedAmount; }
+        public void setTotalStakedAmount(BigDecimal totalStakedAmount) { this.totalStakedAmount = totalStakedAmount; }
+        public Long getTotalTransactions() { return totalTransactions; }
+        public void setTotalTransactions(Long totalTransactions) { this.totalTransactions = totalTransactions; }
+        public BigDecimal getTotalTransactionVolume() { return totalTransactionVolume; }
+        public void setTotalTransactionVolume(BigDecimal totalTransactionVolume) { this.totalTransactionVolume = totalTransactionVolume; }
     }
 } 

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 public class NotificationService {
@@ -35,11 +36,12 @@ public class NotificationService {
     }
 
     public List<Notification> getNotifications(User user) {
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+        // Use a default Pageable for the latest 50 notifications
+        return notificationRepository.findByUserIdAndDeletedFalseOrderByCreatedAtDesc(user.getId(), PageRequest.of(0, 50)).getContent();
     }
 
     public List<Notification> getUnreadNotifications(User user) {
-        return notificationRepository.findByUserAndReadFalseOrderByCreatedAtDesc(user);
+        return notificationRepository.findByUserIdAndReadFalseAndDeletedFalseOrderByCreatedAtDesc(user.getId());
     }
 
     public void markAsRead(Long notificationId) {

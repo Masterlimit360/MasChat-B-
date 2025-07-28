@@ -81,4 +81,6 @@ public interface MassCoinTransactionRepository extends JpaRepository<MassCoinTra
            "COALESCE(SUM(CASE WHEN t.recipient = :user THEN t.amount ELSE 0 END), 0) as totalReceived " +
            "FROM MassCoinTransaction t WHERE (t.sender = :user OR t.recipient = :user) AND t.status = 'CONFIRMED'")
     Object[] getUserTransactionStats(@Param("user") User user);
+
+    Page<MassCoinTransaction> findBySenderIdOrRecipientIdOrderByCreatedAtDesc(Long senderId, Long recipientId, Pageable pageable);
 } 

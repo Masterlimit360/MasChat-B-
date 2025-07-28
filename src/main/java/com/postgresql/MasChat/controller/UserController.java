@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+import com.postgresql.MasChat.config.AppConfig;
 import com.postgresql.MasChat.dto.ProfileUpdateRequest;
 import com.postgresql.MasChat.dto.UserDTO;
 import com.postgresql.MasChat.model.User;
@@ -30,6 +32,7 @@ import com.postgresql.MasChat.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired
@@ -37,6 +40,9 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private AppConfig appConfig;
 
     
 
@@ -71,9 +77,12 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
     @PostMapping("/{userId}/profile/picture")
     public ResponseEntity<String> updateProfilePicture(
             @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file provided");
+            }
             String imageUrl = saveImage(file, "profile");
             User user = userService.updateProfilePicture(userId, imageUrl);
             return ResponseEntity.ok(imageUrl);
@@ -85,9 +94,12 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
     @PostMapping("/{userId}/cover/photo")
     public ResponseEntity<String> updateCoverPhoto(
             @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file provided");
+            }
             String imageUrl = saveImage(file, "cover");
             User user = userService.updateCoverPhoto(userId, imageUrl);
             return ResponseEntity.ok(imageUrl);
@@ -99,10 +111,13 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
     @PostMapping("/{userId}/avatar")
     public ResponseEntity<String> updateAvatar(
             @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam(required = false, defaultValue = "false") boolean showAvatar
     ) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file provided");
+            }
             String imageUrl = saveImage(file, "avatar");
             User user = userService.updateAvatar(userId, imageUrl, showAvatar);
             return ResponseEntity.ok(imageUrl);
@@ -114,15 +129,18 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
     @PostMapping("/{userId}/avatar/picture")
     public ResponseEntity<String> updateAvatarPicture(
             @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam(required = false, defaultValue = "false") boolean showAvatar
     ) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file provided");
+            }
             String imageUrl = saveImage(file, "avatar");
-            userService.updateAvatar(userId, imageUrl, showAvatar);
+            User user = userService.updateAvatar(userId, imageUrl, showAvatar);
             return ResponseEntity.ok(imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload avatar image");
+            return ResponseEntity.status(500).body("Failed to upload image");
         }
     }
 
@@ -138,8 +156,8 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Path filePath = Paths.get(uploadDir + fileName);
         Files.write(filePath, file.getBytes());
         
-        // Return the full URL for the image
-        return "http://10.132.74.85:8080/uploads/" + fileName;
+        // Return the full URL for the image using centralized configuration
+        return appConfig.getUploadUrl(fileName);
     }
 
     @PutMapping("/{id}")

@@ -2,15 +2,20 @@ package com.postgresql.MasChat.service;
 
 import com.postgresql.MasChat.dto.MassCoinDTO;
 import com.postgresql.MasChat.model.MassCoinTransaction;
+import com.postgresql.MasChat.model.MassCoinTransferRequest;
+import com.postgresql.MasChat.model.Notification;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.model.UserWallet;
 import com.postgresql.MasChat.repository.MassCoinTransactionRepository;
+import com.postgresql.MasChat.repository.MassCoinTransferRequestRepository;
+import com.postgresql.MasChat.repository.NotificationRepository;
 import com.postgresql.MasChat.repository.UserRepository;
 import com.postgresql.MasChat.repository.UserWalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,115 +24,269 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class MassCoinService {
-    
+
     @Autowired
-    private UserWalletRepository userWalletRepository;
-    
+    private UserWalletRepository walletRepository;
+
     @Autowired
     private MassCoinTransactionRepository transactionRepository;
-    
+
+    @Autowired
+    private MassCoinTransferRequestRepository transferRequestRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     @Autowired
     private UserRepository userRepository;
-    
-    // Wallet Operations
-    
+
+    // Initialize wallet with 1000 tokens for new users
     @Transactional
     public MassCoinDTO.WalletInfo createWallet(User user) {
-        // Check if wallet already exists
-        if (userWalletRepository.existsByUser(user)) {
-            throw new RuntimeException("Wallet already exists for user: " + user.getId());
+        Optional<UserWallet> existingWallet = walletRepository.findByUserId(user.getId());
+        if (existingWallet.isPresent()) {
+            return new MassCoinDTO.WalletInfo(existingWallet.get());
         }
-        
-        // Generate wallet address (in production, this would be a real blockchain address)
-        String walletAddress = generateWalletAddress();
-        
-        UserWallet wallet = new UserWallet(user, walletAddress, UserWallet.WalletType.CUSTODIAL);
-        wallet = userWalletRepository.save(wallet);
-        
+
+        UserWallet wallet = new UserWallet(user);
+        wallet.setBalance(new BigDecimal("1000.0")); // Give 1000 tokens on signup
+        wallet.setWalletAddress(generateWalletAddress());
+        wallet = walletRepository.save(wallet);
+
+        // Create initial transaction record
+        MassCoinTransaction initialTransaction = new MassCoinTransaction(
+            null, user, new BigDecimal("1000.0"), MassCoinTransaction.TransactionType.AIRDROP
+        );
+        initialTransaction.setStatus(MassCoinTransaction.TransactionStatus.CONFIRMED);
+        initialTransaction.setDescription("Welcome bonus - 1000 Mass Coins");
+        transactionRepository.save(initialTransaction);
+
         return new MassCoinDTO.WalletInfo(wallet);
     }
-    
-    @Transactional
+
     public MassCoinDTO.WalletInfo getWallet(Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
+        Optional<UserWallet> walletOpt = walletRepository.findByUserId(userId);
+        if (walletOpt.isPresent()) {
+            return new MassCoinDTO.WalletInfo(walletOpt.get());
         }
         
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        if (walletOpt.isEmpty()) {
-            // Create wallet if it doesn't exist
-            return createWallet(userOpt.get());
-        }
-        
-        return new MassCoinDTO.WalletInfo(walletOpt.get());
+        // Create wallet if it doesn't exist
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return createWallet(user);
     }
-    
+
     @Transactional
     public MassCoinDTO.WalletInfo updateWalletAddress(Long userId, String newAddress) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
-        }
+        UserWallet wallet = walletRepository.findByUserId(userId)
+            .orElseThrow(() -> new RuntimeException("Wallet not found"));
         
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        if (walletOpt.isEmpty()) {
-            throw new RuntimeException("Wallet not found for user: " + userId);
-        }
-        
-        UserWallet wallet = walletOpt.get();
         wallet.setWalletAddress(newAddress);
-        wallet.setWalletType(UserWallet.WalletType.EXTERNAL);
-        wallet = userWalletRepository.save(wallet);
+        wallet = walletRepository.save(wallet);
         
         return new MassCoinDTO.WalletInfo(wallet);
     }
-    
-    // Transaction Operations
-    
+
+    // Create transfer request (requires approval)
     @Transactional
-    public MassCoinDTO.TransactionInfo transferMass(Long senderId, MassCoinDTO.TransferRequest request) {
-        // Validate sender
-        Optional<User> senderOpt = userRepository.findById(senderId);
-        if (senderOpt.isEmpty()) {
-            throw new RuntimeException("Sender not found: " + senderId);
-        }
+    public MassCoinDTO.TransferRequestInfo createTransferRequest(Long senderId, MassCoinDTO.TransferRequest request) {
+        User sender = userRepository.findById(senderId).orElseThrow(() -> new RuntimeException("Sender not found"));
+        User recipient = userRepository.findById(request.getRecipientId()).orElseThrow(() -> new RuntimeException("Recipient not found"));
         
-        // Validate recipient
-        Optional<User> recipientOpt = userRepository.findById(Long.valueOf(request.getRecipientId()));
-        if (recipientOpt.isEmpty()) {
-            throw new RuntimeException("Recipient not found: " + request.getRecipientId());
-        }
+        // Check if sender has enough balance
+        UserWallet senderWallet = walletRepository.findByUserId(senderId)
+            .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
         
-        User sender = senderOpt.get();
-        User recipient = recipientOpt.get();
-        
-        // Get sender wallet
-        Optional<UserWallet> senderWalletOpt = userWalletRepository.findByUser(sender);
-        if (senderWalletOpt.isEmpty()) {
-            throw new RuntimeException("Sender wallet not found");
-        }
-        
-        // Get or create recipient wallet
-        Optional<UserWallet> recipientWalletOpt = userWalletRepository.findByUser(recipient);
-        UserWallet recipientWallet;
-        if (recipientWalletOpt.isEmpty()) {
-            recipientWallet = new UserWallet(recipient, generateWalletAddress(), UserWallet.WalletType.CUSTODIAL);
-            recipientWallet = userWalletRepository.save(recipientWallet);
-        } else {
-            recipientWallet = recipientWalletOpt.get();
-        }
-        
-        UserWallet senderWallet = senderWalletOpt.get();
-        
-        // Validate balance
         if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
             throw new RuntimeException("Insufficient balance");
         }
+        
+        // Check if request already exists
+        Optional<MassCoinTransferRequest> existingRequest = transferRequestRepository
+            .findBySenderIdAndRecipientIdAndContextTypeAndContextIdAndStatus(
+                senderId, 
+                request.getRecipientId(), 
+                request.getContextType(), 
+                request.getContextId(), 
+                MassCoinTransferRequest.RequestStatus.PENDING
+            );
+        
+        if (existingRequest.isPresent()) {
+            throw new RuntimeException("Transfer request already exists");
+        }
+        
+        // Create transfer request
+        MassCoinTransferRequest transferRequest = new MassCoinTransferRequest(
+            sender, 
+            recipient, 
+            request.getAmount(), 
+            request.getMessage(), 
+            request.getContextType(), 
+            request.getContextId()
+        );
+        
+        transferRequest = transferRequestRepository.save(transferRequest);
+        
+        // Deduct amount from sender's wallet (temporarily)
+        senderWallet.subtractBalance(request.getAmount());
+        walletRepository.save(senderWallet);
+        
+        // Create notification for recipient
+        createNotification(
+            recipient,
+            "Mass Coin Transfer Request",
+            sender.getFullName() + " wants to send you " + request.getAmount() + " Mass Coins",
+            Notification.NotificationType.MASS_COIN_TRANSFER_REQUEST,
+            transferRequest.getId().toString(),
+            "MASS_COIN_TRANSFER",
+            senderId,
+            sender.getFullName(),
+            sender.getProfilePicture()
+        );
+        
+        return new MassCoinDTO.TransferRequestInfo(transferRequest);
+    }
+
+    // Approve transfer request
+    @Transactional
+    public MassCoinDTO.TransactionInfo approveTransferRequest(Long recipientId, Long requestId) {
+        MassCoinTransferRequest request = transferRequestRepository.findById(requestId)
+            .orElseThrow(() -> new RuntimeException("Transfer request not found"));
+        
+        if (!request.getRecipient().getId().equals(recipientId)) {
+            throw new RuntimeException("Unauthorized to approve this request");
+        }
+        
+        if (request.getStatus() != MassCoinTransferRequest.RequestStatus.PENDING) {
+            throw new RuntimeException("Request is not pending");
+        }
+        
+        if (request.isExpired()) {
+            request.setStatus(MassCoinTransferRequest.RequestStatus.EXPIRED);
+            transferRequestRepository.save(request);
+            throw new RuntimeException("Request has expired");
+        }
+        
+        // Update request status
+        request.setStatus(MassCoinTransferRequest.RequestStatus.APPROVED);
+        transferRequestRepository.save(request);
+        
+        // Transfer the coins
+        UserWallet recipientWallet = walletRepository.findByUserId(recipientId)
+            .orElseGet(() -> {
+                createWallet(userRepository.findById(recipientId).get());
+                return walletRepository.findByUserId(recipientId).orElseThrow(() -> new RuntimeException("Wallet creation failed"));
+            });
+        
+        recipientWallet.addBalance(request.getAmount());
+        walletRepository.save(recipientWallet);
+        
+        // Create transaction record
+        MassCoinTransaction transaction = new MassCoinTransaction(
+            request.getSender(), 
+            request.getRecipient(), 
+            request.getAmount(), 
+            MassCoinTransaction.TransactionType.P2P_TRANSFER
+        );
+        transaction.setStatus(MassCoinTransaction.TransactionStatus.CONFIRMED);
+        transaction.setDescription(request.getMessage());
+        transaction = transactionRepository.save(transaction);
+        
+        // Create notifications
+        createNotification(
+            request.getRecipient(),
+            "Mass Coin Received",
+            "You received " + request.getAmount() + " Mass Coins from " + request.getSender().getFullName(),
+            Notification.NotificationType.MASS_COIN_RECEIVED,
+            transaction.getId().toString(),
+            "MASS_COIN_TRANSACTION",
+            request.getSender().getId(),
+            request.getSender().getFullName(),
+            request.getSender().getProfilePicture()
+        );
+        
+        createNotification(
+            request.getSender(),
+            "Transfer Approved",
+            request.getRecipient().getFullName() + " approved your transfer of " + request.getAmount() + " Mass Coins",
+            Notification.NotificationType.MASS_COIN_TRANSFER_APPROVED,
+            transaction.getId().toString(),
+            "MASS_COIN_TRANSACTION",
+            request.getRecipient().getId(),
+            request.getRecipient().getFullName(),
+            request.getRecipient().getProfilePicture()
+        );
+        
+        return new MassCoinDTO.TransactionInfo(transaction);
+    }
+
+    // Reject transfer request
+    @Transactional
+    public void rejectTransferRequest(Long recipientId, Long requestId) {
+        MassCoinTransferRequest request = transferRequestRepository.findById(requestId)
+            .orElseThrow(() -> new RuntimeException("Transfer request not found"));
+        
+        if (!request.getRecipient().getId().equals(recipientId)) {
+            throw new RuntimeException("Unauthorized to reject this request");
+        }
+        
+        if (request.getStatus() != MassCoinTransferRequest.RequestStatus.PENDING) {
+            throw new RuntimeException("Request is not pending");
+        }
+        
+        // Update request status
+        request.setStatus(MassCoinTransferRequest.RequestStatus.REJECTED);
+        transferRequestRepository.save(request);
+        
+        // Refund sender's wallet
+        UserWallet senderWallet = walletRepository.findByUserId(request.getSender().getId())
+            .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
+        
+        senderWallet.addBalance(request.getAmount());
+        walletRepository.save(senderWallet);
+        
+        // Create notification for sender
+        createNotification(
+            request.getSender(),
+            "Transfer Rejected",
+            request.getRecipient().getFullName() + " rejected your transfer of " + request.getAmount() + " Mass Coins. Amount has been refunded.",
+            Notification.NotificationType.MASS_COIN_TRANSFER_REJECTED,
+            requestId.toString(),
+            "MASS_COIN_TRANSFER",
+            request.getRecipient().getId(),
+            request.getRecipient().getFullName(),
+            request.getRecipient().getProfilePicture()
+        );
+    }
+
+    // Direct transfer (no approval needed)
+    @Transactional
+    public MassCoinDTO.TransactionInfo transferMass(Long senderId, MassCoinDTO.TransferRequest request) {
+        User sender = userRepository.findById(senderId).orElseThrow(() -> new RuntimeException("Sender not found"));
+        User recipient = userRepository.findById(request.getRecipientId()).orElseThrow(() -> new RuntimeException("Recipient not found"));
+        
+        UserWallet senderWallet = walletRepository.findByUserId(senderId)
+            .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
+        
+        if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+        
+        // Deduct from sender
+        senderWallet.subtractBalance(request.getAmount());
+        walletRepository.save(senderWallet);
+        
+        // Add to recipient
+        UserWallet recipientWallet = walletRepository.findByUserId(request.getRecipientId())
+            .orElseGet(() -> {
+                createWallet(recipient);
+                return walletRepository.findByUserId(request.getRecipientId()).orElseThrow(() -> new RuntimeException("Wallet creation failed"));
+            });
+        
+        recipientWallet.addBalance(request.getAmount());
+        walletRepository.save(recipientWallet);
         
         // Create transaction
         MassCoinTransaction transaction = new MassCoinTransaction(
@@ -136,206 +295,190 @@ public class MassCoinService {
             request.getAmount(), 
             request.getTransactionType() != null ? request.getTransactionType() : MassCoinTransaction.TransactionType.P2P_TRANSFER
         );
-        transaction.setDescription(request.getDescription());
-        transaction.setTransactionHash(generateTransactionHash());
         transaction.setStatus(MassCoinTransaction.TransactionStatus.CONFIRMED);
-        transaction.setUsdValue(calculateUsdValue(request.getAmount()));
-        
+        transaction.setDescription(request.getMessage());
         transaction = transactionRepository.save(transaction);
         
-        // Update balances
-        senderWallet.subtractBalance(request.getAmount());
-        recipientWallet.addBalance(request.getAmount());
+        // Create notifications
+        createNotification(
+            recipient,
+            "Mass Coin Received",
+            "You received " + request.getAmount() + " Mass Coins from " + sender.getFullName(),
+            Notification.NotificationType.MASS_COIN_RECEIVED,
+            transaction.getId().toString(),
+            "MASS_COIN_TRANSACTION",
+            senderId,
+            sender.getFullName(),
+            sender.getProfilePicture()
+        );
         
-        userWalletRepository.save(senderWallet);
-        userWalletRepository.save(recipientWallet);
+        createNotification(
+            sender,
+            "Mass Coin Sent",
+            "You sent " + request.getAmount() + " Mass Coins to " + recipient.getFullName(),
+            Notification.NotificationType.MASS_COIN_SENT,
+            transaction.getId().toString(),
+            "MASS_COIN_TRANSACTION",
+            request.getRecipientId(),
+            recipient.getFullName(),
+            recipient.getProfilePicture()
+        );
         
         return new MassCoinDTO.TransactionInfo(transaction);
     }
-    
+
+    // Get transfer requests for a user
+    public List<MassCoinDTO.TransferRequestInfo> getTransferRequests(Long userId) {
+        List<MassCoinTransferRequest> requests = transferRequestRepository.findByRecipientIdAndStatusOrderByCreatedAtDesc(
+            userId, MassCoinTransferRequest.RequestStatus.PENDING
+        );
+        return requests.stream().map(MassCoinDTO.TransferRequestInfo::new).toList();
+    }
+
+    // Get pending transfer requests count
+    public long getPendingTransferRequestsCount(Long userId) {
+        return transferRequestRepository.countByRecipientIdAndStatus(userId, MassCoinTransferRequest.RequestStatus.PENDING);
+    }
+
+    // Get transactions for a user
+    public Page<MassCoinDTO.TransactionInfo> getUserTransactions(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MassCoinTransaction> transactions = transactionRepository.findBySenderIdOrRecipientIdOrderByCreatedAtDesc(
+            userId, userId, pageable
+        );
+        return transactions.map(MassCoinDTO.TransactionInfo::new);
+    }
+
+    // Tip creator (direct transfer)
     @Transactional
     public MassCoinDTO.TransactionInfo tipCreator(Long senderId, String postId, BigDecimal amount, String description) {
-        // For now, we'll use a system user as recipient for tips
-        // In a real implementation, you'd get the post creator
-        Optional<User> systemUser = userRepository.findById(1L); // Assuming system user has ID 1
-        if (systemUser.isEmpty()) {
-            throw new RuntimeException("System user not found");
-        }
+        // Find post creator
+        // This would need to be implemented based on your post structure
+        // For now, we'll use a placeholder
+        User recipient = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("Recipient not found"));
         
         MassCoinDTO.TransferRequest request = new MassCoinDTO.TransferRequest();
-        request.setRecipientId("1"); // System user ID as string
+        request.setRecipientId(recipient.getId());
         request.setAmount(amount);
-        request.setDescription(description != null ? description : "Tip for post: " + postId);
+        request.setMessage(description);
         request.setTransactionType(MassCoinTransaction.TransactionType.CONTENT_TIP);
+        request.setContextType(MassCoinTransferRequest.ContextType.POST);
+        request.setContextId(postId);
         
         return transferMass(senderId, request);
     }
-    
+
+    // Reward user (system reward)
     @Transactional
     public MassCoinDTO.TransactionInfo rewardUser(Long userId, BigDecimal amount, String reason) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
-        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Get or create user wallet
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        UserWallet wallet;
-        if (walletOpt.isEmpty()) {
-            wallet = new UserWallet(userOpt.get(), generateWalletAddress(), UserWallet.WalletType.CUSTODIAL);
-            wallet = userWalletRepository.save(wallet);
-        } else {
-            wallet = walletOpt.get();
-        }
+        UserWallet wallet = walletRepository.findByUserId(userId)
+            .orElseGet(() -> {
+                createWallet(user);
+                return walletRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("Wallet creation failed"));
+            });
         
-        // Create reward transaction (from system to user)
-        Optional<User> systemUser = userRepository.findById(1L); // Assuming system user has ID 1
-        if (systemUser.isEmpty()) {
-            throw new RuntimeException("System user not found");
-        }
+        wallet.addBalance(amount);
+        walletRepository.save(wallet);
         
         MassCoinTransaction transaction = new MassCoinTransaction(
-            systemUser.get(),
-            userOpt.get(),
-            amount,
+            null, 
+            user, 
+            amount, 
             MassCoinTransaction.TransactionType.REWARD_DISTRIBUTION
         );
-        transaction.setDescription(reason);
-        transaction.setTransactionHash(generateTransactionHash());
         transaction.setStatus(MassCoinTransaction.TransactionStatus.CONFIRMED);
-        transaction.setUsdValue(calculateUsdValue(amount));
-        
+        transaction.setDescription(reason);
         transaction = transactionRepository.save(transaction);
         
-        // Update user balance
-        wallet.addBalance(amount);
-        userWalletRepository.save(wallet);
+        // Create notification
+        createNotification(
+            user,
+            "Mass Coin Reward",
+            "You received " + amount + " Mass Coins as a reward: " + reason,
+            Notification.NotificationType.MASS_COIN_RECEIVED,
+            transaction.getId().toString(),
+            "MASS_COIN_TRANSACTION",
+            null,
+            "System",
+            null
+        );
         
         return new MassCoinDTO.TransactionInfo(transaction);
     }
-    
-    // Staking Operations
-    
+
+    // Staking methods
     @Transactional
     public MassCoinDTO.WalletInfo stakeMass(Long userId, BigDecimal amount) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
-        }
-        
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        if (walletOpt.isEmpty()) {
-            throw new RuntimeException("Wallet not found for user: " + userId);
-        }
-        
-        UserWallet wallet = walletOpt.get();
+        UserWallet wallet = walletRepository.findByUserId(userId)
+            .orElseThrow(() -> new RuntimeException("Wallet not found"));
         
         if (wallet.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient balance for staking");
         }
         
         wallet.stake(amount);
-        wallet = userWalletRepository.save(wallet);
+        wallet = walletRepository.save(wallet);
         
         return new MassCoinDTO.WalletInfo(wallet);
     }
-    
+
     @Transactional
     public MassCoinDTO.WalletInfo unstakeMass(Long userId, BigDecimal amount) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
-        }
-        
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        if (walletOpt.isEmpty()) {
-            throw new RuntimeException("Wallet not found for user: " + userId);
-        }
-        
-        UserWallet wallet = walletOpt.get();
+        UserWallet wallet = walletRepository.findByUserId(userId)
+            .orElseThrow(() -> new RuntimeException("Wallet not found"));
         
         if (wallet.getStakedAmount().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient staked amount");
         }
         
         wallet.unstake(amount);
-        wallet = userWalletRepository.save(wallet);
+        wallet = walletRepository.save(wallet);
         
         return new MassCoinDTO.WalletInfo(wallet);
     }
-    
-    // Query Operations
-    
-    public List<MassCoinDTO.TransactionInfo> getUserTransactions(Long userId, int page, int size) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
+
+    // Scheduled task to expire old requests
+    @Scheduled(fixedRate = 3600000) // Run every hour
+    @Transactional
+    public void expireOldRequests() {
+        List<MassCoinTransferRequest> expiredRequests = transferRequestRepository.findRequestsToExpire(LocalDateTime.now());
+        
+        for (MassCoinTransferRequest request : expiredRequests) {
+            request.setStatus(MassCoinTransferRequest.RequestStatus.EXPIRED);
+            transferRequestRepository.save(request);
+            
+            // Refund sender
+            UserWallet senderWallet = walletRepository.findByUserId(request.getSender().getId())
+                .orElseThrow(() -> new RuntimeException("Sender wallet not found"));
+            
+            senderWallet.addBalance(request.getAmount());
+            walletRepository.save(senderWallet);
+            
+            // Create notification
+            createNotification(
+                request.getSender(),
+                "Transfer Expired",
+                "Your transfer request to " + request.getRecipient().getFullName() + " has expired. Amount has been refunded.",
+                Notification.NotificationType.MASS_COIN_TRANSFER_REJECTED,
+                request.getId().toString(),
+                "MASS_COIN_TRANSFER",
+                request.getRecipient().getId(),
+                request.getRecipient().getFullName(),
+                request.getRecipient().getProfilePicture()
+            );
         }
-        
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MassCoinTransaction> transactions = transactionRepository.findByUser(userOpt.get(), pageable);
-        
-        return transactions.getContent().stream()
-            .map(MassCoinDTO.TransactionInfo::new)
-            .collect(Collectors.toList());
     }
-    
-    public MassCoinDTO.UserStats getUserStats(Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found: " + userId);
-        }
-        
-        Optional<UserWallet> walletOpt = userWalletRepository.findByUser(userOpt.get());
-        if (walletOpt.isEmpty()) {
-            throw new RuntimeException("Wallet not found for user: " + userId);
-        }
-        
-        UserWallet wallet = walletOpt.get();
-        Object[] stats = transactionRepository.getUserTransactionStats(userOpt.get());
-        
-        MassCoinDTO.UserStats userStats = new MassCoinDTO.UserStats();
-        userStats.setBalance(wallet.getBalance());
-        userStats.setStakedAmount(wallet.getStakedAmount());
-        userStats.setTotalEarned(wallet.getTotalEarned());
-        userStats.setTotalSpent(wallet.getTotalSpent());
-        userStats.setTransactionCount((Long) stats[0] + (Long) stats[1]); // sent + received
-        userStats.setTotalSent((BigDecimal) stats[2]);
-        userStats.setTotalReceived((BigDecimal) stats[3]);
-        
-        return userStats;
-    }
-    
-    public MassCoinDTO.PlatformStats getPlatformStats() {
-        Object[] walletStats = userWalletRepository.getWalletStatistics();
-        BigDecimal totalBalance = userWalletRepository.getTotalPlatformBalance();
-        BigDecimal totalStaked = userWalletRepository.getTotalStakedAmount();
-        BigDecimal totalVolume = transactionRepository.getTotalPlatformVolume();
-        
-        MassCoinDTO.PlatformStats platformStats = new MassCoinDTO.PlatformStats();
-        platformStats.setTotalBalance(totalBalance);
-        platformStats.setTotalStaked(totalStaked);
-        platformStats.setTotalVolume(totalVolume);
-        platformStats.setTotalWallets((Long) walletStats[0]);
-        platformStats.setTotalTransactions(transactionRepository.count());
-        platformStats.setMassPrice(new BigDecimal("0.001")); // Mock price, in real app would come from oracle
-        
-        return platformStats;
-    }
-    
-    // Helper Methods
-    
+
+    // Helper methods
     private String generateWalletAddress() {
-        return "0x" + UUID.randomUUID().toString().replace("-", "").substring(0, 40);
+        return "MC" + UUID.randomUUID().toString().replace("-", "").substring(0, 32).toUpperCase();
     }
-    
-    private String generateTransactionHash() {
-        return "0x" + UUID.randomUUID().toString().replace("-", "").substring(0, 64);
-    }
-    
-    private BigDecimal calculateUsdValue(BigDecimal massAmount) {
-        // Mock USD value calculation (in real app would use price oracle)
-        BigDecimal massPrice = new BigDecimal("0.001");
-        return massAmount.multiply(massPrice);
+
+    private void createNotification(User user, String title, String message, Notification.NotificationType type, 
+                                  String relatedId, String relatedType, Long senderId, String senderName, String senderAvatar) {
+        Notification notification = new Notification(user, title, message, type, relatedId, relatedType, senderId, senderName, senderAvatar);
+        notificationRepository.save(notification);
     }
 } 

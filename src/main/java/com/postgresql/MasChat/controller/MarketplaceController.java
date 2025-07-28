@@ -1,21 +1,24 @@
 package com.postgresql.MasChat.controller;
 
-import com.postgresql.MasChat.model.MarketplaceItem;
+import com.postgresql.MasChat.config.AppConfig;
 import com.postgresql.MasChat.model.MarketplaceCategory;
+import com.postgresql.MasChat.model.MarketplaceItem;
 import com.postgresql.MasChat.model.MarketplaceOrder;
 import com.postgresql.MasChat.model.User;
-import com.postgresql.MasChat.service.MarketplaceService;
 import com.postgresql.MasChat.repository.MarketplaceItemRepository;
 import com.postgresql.MasChat.repository.UserRepository;
+import com.postgresql.MasChat.service.MarketplaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import java.util.List;
@@ -34,6 +37,9 @@ public class MarketplaceController {
     private MarketplaceItemRepository itemRepository;
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private AppConfig appConfig;
 
     // --- Items ---
     @GetMapping("/items")
@@ -123,7 +129,7 @@ public class MarketplaceController {
         String fileName = type + "_" + UUID.randomUUID() + fileExtension;
         Path filePath = Paths.get(uploadDir + fileName);
         Files.write(filePath, file.getBytes());
-        return "http://10.132.74.85:8080/uploads/" + fileName;
+        return appConfig.getUploadUrl(fileName);
     }
 
     @PutMapping("/items/{id}")

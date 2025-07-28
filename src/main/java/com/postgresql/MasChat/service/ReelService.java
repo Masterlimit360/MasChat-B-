@@ -82,4 +82,9 @@ public class ReelService {
     public List<Reel> searchReels(String query) {
         return reelRepository.findByCaptionContainingIgnoreCase(query);
     }
+
+    public List<ReelComment> getComments(Long reelId) {
+        Reel reel = reelRepository.findById(reelId).orElseThrow();
+        return reelCommentRepository.findByReel(reel);
+    }
 }

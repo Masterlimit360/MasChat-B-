@@ -3,12 +3,11 @@ package com.postgresql.MasChat.controller;
 import com.postgresql.MasChat.dto.MassCoinDTO;
 import com.postgresql.MasChat.service.MassCoinService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,224 +15,175 @@ import java.util.Map;
 @RequestMapping("/api/masscoin")
 @CrossOrigin(origins = "*")
 public class MassCoinController {
-    
+
     @Autowired
     private MassCoinService massCoinService;
-    
-    // Wallet Endpoints
-    
+
+    // Wallet endpoints
     @GetMapping("/wallet")
-    public ResponseEntity<?> getWallet(Authentication authentication) {
+    public ResponseEntity<MassCoinDTO.WalletInfo> getWallet(@RequestParam Long userId) {
         try {
-            Long userId = Long.valueOf(authentication.getName());
             MassCoinDTO.WalletInfo wallet = massCoinService.getWallet(userId);
             return ResponseEntity.ok(wallet);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @PostMapping("/wallet/address")
-    public ResponseEntity<?> updateWalletAddress(
-            Authentication authentication,
+    public ResponseEntity<MassCoinDTO.WalletInfo> updateWalletAddress(
+            @RequestParam Long userId,
             @RequestBody Map<String, String> request) {
         try {
-            Long userId = Long.valueOf(authentication.getName());
-            String newAddress = request.get("walletAddress");
-            
-            if (newAddress == null || newAddress.trim().isEmpty()) {
-                throw new RuntimeException("Wallet address is required");
-            }
-            
+            String newAddress = request.get("address");
             MassCoinDTO.WalletInfo wallet = massCoinService.updateWalletAddress(userId, newAddress);
             return ResponseEntity.ok(wallet);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
-    // Transaction Endpoints
-    
-    @PostMapping("/transfer")
-    public ResponseEntity<?> transferMass(
-            Authentication authentication,
+
+    // Transfer request endpoints
+    @PostMapping("/transfer-request")
+    public ResponseEntity<MassCoinDTO.TransferRequestInfo> createTransferRequest(
+            @RequestParam Long senderId,
             @RequestBody MassCoinDTO.TransferRequest request) {
         try {
-            Long senderId = Long.valueOf(authentication.getName());
-            
-            if (request.getRecipientId() == null || request.getRecipientId().trim().isEmpty()) {
-                throw new RuntimeException("Recipient ID is required");
-            }
-            
-            if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Valid amount is required");
-            }
-            
+            MassCoinDTO.TransferRequestInfo transferRequest = massCoinService.createTransferRequest(senderId, request);
+            return ResponseEntity.ok(transferRequest);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/transfer-request/{requestId}/approve")
+    public ResponseEntity<MassCoinDTO.TransactionInfo> approveTransferRequest(
+            @PathVariable Long requestId,
+            @RequestParam Long recipientId) {
+        try {
+            MassCoinDTO.TransactionInfo transaction = massCoinService.approveTransferRequest(recipientId, requestId);
+            return ResponseEntity.ok(transaction);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/transfer-request/{requestId}/reject")
+    public ResponseEntity<Void> rejectTransferRequest(
+            @PathVariable Long requestId,
+            @RequestParam Long recipientId) {
+        try {
+            massCoinService.rejectTransferRequest(recipientId, requestId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/transfer-requests")
+    public ResponseEntity<List<MassCoinDTO.TransferRequestInfo>> getTransferRequests(@RequestParam Long userId) {
+        try {
+            List<MassCoinDTO.TransferRequestInfo> requests = massCoinService.getTransferRequests(userId);
+            return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/transfer-requests/pending-count")
+    public ResponseEntity<Map<String, Long>> getPendingTransferRequestsCount(@RequestParam Long userId) {
+        try {
+            long count = massCoinService.getPendingTransferRequestsCount(userId);
+            return ResponseEntity.ok(Map.of("count", count));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Direct transfer endpoints
+    @PostMapping("/transfer")
+    public ResponseEntity<MassCoinDTO.TransactionInfo> transferMass(
+            @RequestParam Long senderId,
+            @RequestBody MassCoinDTO.TransferRequest request) {
+        try {
             MassCoinDTO.TransactionInfo transaction = massCoinService.transferMass(senderId, request);
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    // Tip endpoints
     @PostMapping("/tip")
-    public ResponseEntity<?> tipCreator(
-            Authentication authentication,
-            @RequestBody Map<String, Object> request) {
+    public ResponseEntity<MassCoinDTO.TransactionInfo> tipCreator(
+            @RequestParam Long senderId,
+            @RequestParam String postId,
+            @RequestParam BigDecimal amount,
+            @RequestParam(required = false) String description) {
         try {
-            Long senderId = Long.valueOf(authentication.getName());
-            String postId = (String) request.get("postId");
-            BigDecimal amount = new BigDecimal(request.get("amount").toString());
-            String description = (String) request.get("description");
-            
-            if (postId == null || postId.trim().isEmpty()) {
-                throw new RuntimeException("Post ID is required");
-            }
-            
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Valid amount is required");
-            }
-            
             MassCoinDTO.TransactionInfo transaction = massCoinService.tipCreator(senderId, postId, amount, description);
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    // Reward endpoints
     @PostMapping("/reward")
-    public ResponseEntity<?> rewardUser(
-            Authentication authentication,
-            @RequestBody Map<String, Object> request) {
+    public ResponseEntity<MassCoinDTO.TransactionInfo> rewardUser(
+            @RequestParam Long userId,
+            @RequestParam BigDecimal amount,
+            @RequestParam String reason) {
         try {
-            Long userId = Long.valueOf((String) request.get("userId"));
-            BigDecimal amount = new BigDecimal(request.get("amount").toString());
-            String reason = (String) request.get("reason");
-            
-            if (userId == null) {
-                throw new RuntimeException("User ID is required");
-            }
-            
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Valid amount is required");
-            }
-            
             MassCoinDTO.TransactionInfo transaction = massCoinService.rewardUser(userId, amount, reason);
             return ResponseEntity.ok(transaction);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
-    // Staking Endpoints
-    
+
+    // Staking endpoints
     @PostMapping("/stake")
-    public ResponseEntity<?> stakeMass(
-            Authentication authentication,
-            @RequestBody MassCoinDTO.StakingRequest request) {
+    public ResponseEntity<MassCoinDTO.WalletInfo> stakeMass(
+            @RequestParam Long userId,
+            @RequestParam BigDecimal amount) {
         try {
-            Long userId = Long.valueOf(authentication.getName());
-            
-            if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Valid amount is required");
-            }
-            
-            if (!"stake".equals(request.getAction())) {
-                throw new RuntimeException("Invalid action. Use 'stake' for staking.");
-            }
-            
-            MassCoinDTO.WalletInfo wallet = massCoinService.stakeMass(userId, request.getAmount());
+            MassCoinDTO.WalletInfo wallet = massCoinService.stakeMass(userId, amount);
             return ResponseEntity.ok(wallet);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @PostMapping("/unstake")
-    public ResponseEntity<?> unstakeMass(
-            Authentication authentication,
-            @RequestBody MassCoinDTO.StakingRequest request) {
+    public ResponseEntity<MassCoinDTO.WalletInfo> unstakeMass(
+            @RequestParam Long userId,
+            @RequestParam BigDecimal amount) {
         try {
-            Long userId = Long.valueOf(authentication.getName());
-            
-            if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new RuntimeException("Valid amount is required");
-            }
-            
-            if (!"unstake".equals(request.getAction())) {
-                throw new RuntimeException("Invalid action. Use 'unstake' for unstaking.");
-            }
-            
-            MassCoinDTO.WalletInfo wallet = massCoinService.unstakeMass(userId, request.getAmount());
+            MassCoinDTO.WalletInfo wallet = massCoinService.unstakeMass(userId, amount);
             return ResponseEntity.ok(wallet);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
-    // Query Endpoints
-    
+
+    // Transaction endpoints
     @GetMapping("/transactions")
-    public ResponseEntity<?> getUserTransactions(
-            Authentication authentication,
+    public ResponseEntity<Page<MassCoinDTO.TransactionInfo>> getUserTransactions(
+            @RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            Long userId = Long.valueOf(authentication.getName());
-            List<MassCoinDTO.TransactionInfo> transactions = massCoinService.getUserTransactions(userId, page, size);
+            Page<MassCoinDTO.TransactionInfo> transactions = massCoinService.getUserTransactions(userId, page, size);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().build();
         }
     }
-    
-    @GetMapping("/stats/user")
-    public ResponseEntity<?> getUserStats(Authentication authentication) {
-        try {
-            Long userId = Long.valueOf(authentication.getName());
-            MassCoinDTO.UserStats stats = massCoinService.getUserStats(userId);
-            return ResponseEntity.ok(stats);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-    
-    @GetMapping("/stats/platform")
-    public ResponseEntity<?> getPlatformStats() {
-        try {
-            MassCoinDTO.PlatformStats stats = massCoinService.getPlatformStats();
-            return ResponseEntity.ok(stats);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-    
-    // Health Check
+
+    // Health check
     @GetMapping("/health")
-    public ResponseEntity<?> healthCheck() {
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "Mass Coin service is running");
-        response.put("version", "1.0.0");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> healthCheck() {
+        return ResponseEntity.ok(Map.of("status", "healthy", "service", "MassCoin"));
     }
 } 

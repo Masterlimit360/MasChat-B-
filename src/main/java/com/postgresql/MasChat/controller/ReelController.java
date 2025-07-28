@@ -2,6 +2,7 @@
 package com.postgresql.MasChat.controller;
 
 import com.postgresql.MasChat.dto.ReelDTO;
+import com.postgresql.MasChat.dto.ReelCommentDTO;
 import com.postgresql.MasChat.model.Reel;
 import com.postgresql.MasChat.model.ReelComment;
 import com.postgresql.MasChat.service.ReelService;
@@ -51,6 +52,11 @@ public class ReelController {
     @PostMapping("/{reelId}/comment")
     public ReelComment addComment(@PathVariable Long reelId, @RequestParam Long userId, @RequestBody String content) {
         return reelService.addComment(reelId, userId, content);
+    }
+
+    @GetMapping("/{reelId}/comments")
+    public List<ReelCommentDTO> getComments(@PathVariable Long reelId) {
+        return reelService.getComments(reelId).stream().map(ReelCommentDTO::fromEntity).collect(Collectors.toList());
     }
 
     @PostMapping("/{reelId}/share")

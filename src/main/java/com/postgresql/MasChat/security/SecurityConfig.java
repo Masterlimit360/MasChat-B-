@@ -32,11 +32,13 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/health").permitAll()
+                .requestMatchers("/", "/health", "/error").permitAll()
                 .requestMatchers("/api/auth/**", "/api/auth/test", "/api/auth/test-token").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/ws-chat/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/users/*/avatar", "/api/users/*/avatar/picture", "/api/users/*/profile/picture", "/api/users/*/cover/photo").permitAll()
+                .requestMatchers("/api/marketplace/upload-image").permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
