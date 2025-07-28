@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReelDTO {
-    private Long id;
+    private String id;
     private Long userId;
     private String username;
     private String profilePicture;
@@ -20,7 +20,7 @@ public class ReelDTO {
 
     public static ReelDTO fromEntity(Reel reel) {
         ReelDTO dto = new ReelDTO();
-        dto.setId(reel.getId());
+        dto.setId(String.valueOf(reel.getId()));
         dto.setUserId(reel.getUser().getId());
         dto.setUsername(reel.getUser().getUsername());
         dto.setProfilePicture(reel.getUser().getProfilePicture());
@@ -53,8 +53,8 @@ public class ReelDTO {
         return dto;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public String getUsername() { return username; }

@@ -53,6 +53,27 @@ public class UserService {
 
     @Transactional
 public User updateProfile(Long userId, ProfileUpdateRequest request) {
+    System.out.println("Received updateProfile request for userId: " + userId);
+    System.out.println("Bio: " + request.getBio());
+    System.out.println("FullName: " + request.getFullName());
+    System.out.println("ProfilePicture: " + request.getProfilePicture());
+    System.out.println("CoverPhoto: " + request.getCoverPhoto());
+    if (request.getDetails() != null) {
+        var dto = request.getDetails();
+        System.out.println("Details:");
+        System.out.println("  profileType: " + dto.getProfileType());
+        System.out.println("  worksAt1: " + dto.getWorksAt1());
+        System.out.println("  worksAt2: " + dto.getWorksAt2());
+        System.out.println("  studiedAt: " + dto.getStudiedAt());
+        System.out.println("  wentTo: " + dto.getWentTo());
+        System.out.println("  currentCity: " + dto.getCurrentCity());
+        System.out.println("  hometown: " + dto.getHometown());
+        System.out.println("  relationshipStatus: " + dto.getRelationshipStatus());
+        System.out.println("  showAvatar: " + dto.getShowAvatar());
+        System.out.println("  avatar: " + dto.getAvatar());
+        System.out.println("  followerCount: " + dto.getFollowerCount());
+        System.out.println("  followingCount: " + dto.getFollowingCount());
+    }
     User user = this.findById(userId);
     
     if (request.getBio() != null) user.setBio(request.getBio());

@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.postgresql.MasChat.repository.ReelRepository;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/reels")
@@ -25,7 +29,11 @@ public class ReelController {
 
     @GetMapping
     public List<ReelDTO> getRecentReels() {
-        return reelService.getRecentReels().stream().map(ReelDTO::fromEntity).collect(Collectors.toList());
+        System.out.println("Received request for recent reels");
+        List<Reel> reels = reelService.getRecentReels();
+        List<ReelDTO> dtos = reels.stream().map(ReelDTO::fromEntity).collect(Collectors.toList());
+        System.out.println("Returning " + dtos.size() + " reels");
+        return dtos;
     }
 
     @GetMapping("/search")
@@ -35,8 +43,16 @@ public class ReelController {
 
     @PostMapping("/create")
     public ReelDTO createReel(@RequestBody ReelCreateRequest req) {
+        System.out.println("Received create reel request:");
+        System.out.println("  User ID: " + req.getUserId());
+        System.out.println("  Media URL: " + req.getMediaUrl());
+        System.out.println("  Caption: " + req.getCaption());
+        
         Reel reel = reelService.createReel(req.getUserId(), req.getMediaUrl(), req.getCaption());
-        return ReelDTO.fromEntity(reel);
+        ReelDTO dto = ReelDTO.fromEntity(reel);
+        
+        System.out.println("Returning reel DTO with ID: " + dto.getId());
+        return dto;
     }
 
     @PostMapping("/{reelId}/like")
@@ -67,6 +83,37 @@ public class ReelController {
     @DeleteMapping("/{reelId}")
     public void deleteReel(@PathVariable Long reelId, @RequestParam Long userId) {
         reelService.deleteReel(reelId, userId);
+    }
+
+    @Autowired
+    private ReelRepository reelRepository;
+
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Object>> testReels() {
+        System.out.println("=== Testing Reels Endpoint ===");
+        try {
+            List<Reel> allReels = reelRepository.findAll();
+            System.out.println("Total reels in database: " + allReels.size());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalReels", allReels.size());
+            response.put("reels", allReels.stream().map(reel -> {
+                Map<String, Object> reelInfo = new HashMap<>();
+                reelInfo.put("id", reel.getId());
+                reelInfo.put("userId", reel.getUser() != null ? reel.getUser().getId() : "null");
+                reelInfo.put("username", reel.getUser() != null ? reel.getUser().getUsername() : "null");
+                reelInfo.put("mediaUrl", reel.getMediaUrl());
+                reelInfo.put("caption", reel.getCaption());
+                reelInfo.put("createdAt", reel.getCreatedAt());
+                return reelInfo;
+            }).collect(Collectors.toList()));
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Error in test endpoint: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 
     public static class ReelCreateRequest {

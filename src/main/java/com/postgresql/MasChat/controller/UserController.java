@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -76,73 +77,83 @@ public ResponseEntity<User> getUserById(@PathVariable Long id) {
 
     @PostMapping("/{userId}/profile/picture")
     public ResponseEntity<String> updateProfilePicture(
-            @PathVariable Long userId,
-            @RequestParam(value = "file", required = false) MultipartFile file
-    ) {
-        try {
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file provided");
-            }
-            String imageUrl = saveImage(file, "profile");
-            User user = userService.updateProfilePicture(userId, imageUrl);
-            return ResponseEntity.ok(imageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload image");
+        @PathVariable Long userId,
+        @RequestBody Map<String, String> request
+) {
+    try {
+        System.out.println("Received profile picture update request for userId: " + userId);
+        System.out.println("Request body: " + request);
+        
+        String imageUrl = request.get("imageUrl");
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            System.out.println("No image URL provided in request");
+            return ResponseEntity.badRequest().body("No image URL provided");
         }
+        
+        System.out.println("Updating profile picture with URL: " + imageUrl);
+        User user = userService.updateProfilePicture(userId, imageUrl);
+        System.out.println("Profile picture updated successfully");
+        return ResponseEntity.ok(imageUrl);
+    } catch (Exception e) {
+        System.err.println("Error updating profile picture: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Failed to upload image");
     }
+}
 
-    @PostMapping("/{userId}/cover/photo")
-    public ResponseEntity<String> updateCoverPhoto(
-            @PathVariable Long userId,
-            @RequestParam(value = "file", required = false) MultipartFile file
-    ) {
-        try {
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file provided");
-            }
-            String imageUrl = saveImage(file, "cover");
-            User user = userService.updateCoverPhoto(userId, imageUrl);
-            return ResponseEntity.ok(imageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload image");
+@PostMapping("/{userId}/cover/photo")
+public ResponseEntity<String> updateCoverPhoto(
+        @PathVariable Long userId,
+        @RequestBody Map<String, String> request
+) {
+    try {
+        System.out.println("Received cover photo update request for userId: " + userId);
+        System.out.println("Request body: " + request);
+        
+        String imageUrl = request.get("imageUrl");
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            System.out.println("No image URL provided in request");
+            return ResponseEntity.badRequest().body("No image URL provided");
         }
+        
+        System.out.println("Updating cover photo with URL: " + imageUrl);
+        User user = userService.updateCoverPhoto(userId, imageUrl);
+        System.out.println("Cover photo updated successfully");
+        return ResponseEntity.ok(imageUrl);
+    } catch (Exception e) {
+        System.err.println("Error updating cover photo: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Failed to upload image");
     }
+}
 
-    @PostMapping("/{userId}/avatar")
-    public ResponseEntity<String> updateAvatar(
-            @PathVariable Long userId,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(required = false, defaultValue = "false") boolean showAvatar
-    ) {
-        try {
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file provided");
-            }
-            String imageUrl = saveImage(file, "avatar");
-            User user = userService.updateAvatar(userId, imageUrl, showAvatar);
-            return ResponseEntity.ok(imageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload image");
+@PostMapping("/{userId}/avatar/picture")
+public ResponseEntity<String> updateAvatarPicture(
+        @PathVariable Long userId,
+        @RequestBody Map<String, String> request,
+        @RequestParam(required = false, defaultValue = "false") boolean showAvatar
+) {
+    try {
+        System.out.println("Received avatar update request for userId: " + userId);
+        System.out.println("Request body: " + request);
+        System.out.println("Show avatar: " + showAvatar);
+        
+        String imageUrl = request.get("imageUrl");
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            System.out.println("No image URL provided in request");
+            return ResponseEntity.badRequest().body("No image URL provided");
         }
+        
+        System.out.println("Updating avatar with URL: " + imageUrl);
+        User user = userService.updateAvatar(userId, imageUrl, showAvatar);
+        System.out.println("Avatar updated successfully");
+        return ResponseEntity.ok(imageUrl);
+    } catch (Exception e) {
+        System.err.println("Error updating avatar: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(500).body("Failed to upload image");
     }
-
-    @PostMapping("/{userId}/avatar/picture")
-    public ResponseEntity<String> updateAvatarPicture(
-            @PathVariable Long userId,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @RequestParam(required = false, defaultValue = "false") boolean showAvatar
-    ) {
-        try {
-            if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file provided");
-            }
-            String imageUrl = saveImage(file, "avatar");
-            User user = userService.updateAvatar(userId, imageUrl, showAvatar);
-            return ResponseEntity.ok(imageUrl);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload image");
-        }
-    }
+}
 
 
     private String saveImage(MultipartFile file, String type) throws IOException {

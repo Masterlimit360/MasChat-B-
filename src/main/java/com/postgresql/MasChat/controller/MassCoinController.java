@@ -25,8 +25,13 @@ public class MassCoinController {
         try {
             MassCoinDTO.WalletInfo wallet = massCoinService.getWallet(userId);
             return ResponseEntity.ok(wallet);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("User not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.status(500).build();
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(500).build();
         }
     }
 

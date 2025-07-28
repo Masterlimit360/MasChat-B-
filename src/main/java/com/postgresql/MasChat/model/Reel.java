@@ -17,6 +17,7 @@ public class Reel {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "video_url")
     private String mediaUrl;
     private String caption;
     private LocalDateTime createdAt = LocalDateTime.now();

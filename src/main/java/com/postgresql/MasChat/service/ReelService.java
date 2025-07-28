@@ -28,18 +28,31 @@ public class ReelService {
     private ReelCommentRepository reelCommentRepository;
 
     public Reel createReel(Long userId, String mediaUrl, String caption) {
+        System.out.println("Creating reel for user: " + userId);
+        System.out.println("Media URL: " + mediaUrl);
+        System.out.println("Caption: " + caption);
+        
         User user = userRepository.findById(userId).orElseThrow();
         Reel reel = new Reel();
         reel.setUser(user);
         reel.setMediaUrl(mediaUrl);
         reel.setCaption(caption);
         reel.setCreatedAt(LocalDateTime.now());
-        return reelRepository.save(reel);
+        
+        Reel savedReel = reelRepository.save(reel);
+        System.out.println("Reel created successfully with ID: " + savedReel.getId());
+        return savedReel;
     }
 
     public List<Reel> getRecentReels() {
         LocalDateTime since = LocalDateTime.now().minusDays(7); // Show last 7 days
-        return reelRepository.findByCreatedAtAfter(since);
+        System.out.println("Fetching reels created after: " + since);
+        List<Reel> reels = reelRepository.findByCreatedAtAfter(since);
+        System.out.println("Found " + reels.size() + " reels");
+        for (Reel reel : reels) {
+            System.out.println("Reel ID: " + reel.getId() + ", User: " + reel.getUser().getUsername() + ", Media: " + reel.getMediaUrl());
+        }
+        return reels;
     }
 
     public void deleteReel(Long reelId, Long userId) {
