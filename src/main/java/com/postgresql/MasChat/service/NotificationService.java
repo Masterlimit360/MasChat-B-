@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.data.domain.PageRequest;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class NotificationService {
@@ -30,15 +33,23 @@ public class NotificationService {
         notification.setMessage(message);
         notification.setNotificationType(type);
         notification.setRead(false);
-        notification.setCreatedAt(java.time.LocalDateTime.now());
+        notification.setCreatedAt(LocalDateTime.now());
         Notification saved = notificationRepository.save(notification);
         
-        // Send via WebSocket
+        // Send via WebSocket with enhanced payload
         try {
+            Map<String, Object> notificationPayload = new HashMap<>();
+            notificationPayload.put("id", saved.getId());
+            notificationPayload.put("message", saved.getMessage());
+            notificationPayload.put("title", saved.getTitle());
+            notificationPayload.put("read", saved.isRead());
+            notificationPayload.put("createdAt", saved.getCreatedAt());
+            notificationPayload.put("type", "NEW_NOTIFICATION");
+            
             messagingTemplate.convertAndSendToUser(
                 user.getId().toString(),
                 "/queue/notifications",
-                saved
+                notificationPayload
             );
         } catch (Exception e) {
             // Log WebSocket error but don't fail the notification creation
@@ -79,17 +90,123 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(notificationId).orElse(null);
         if (notification != null) {
             notification.setRead(true);
+            notification.setReadAt(LocalDateTime.now());
             notificationRepository.save(notification);
-            // Optionally, send update via WebSocket
+            
+            // Send real-time update via WebSocket
+            try {
+                Map<String, Object> updatePayload = new HashMap<>();
+                updatePayload.put("id", notification.getId());
+                updatePayload.put("read", true);
+                updatePayload.put("readAt", notification.getReadAt());
+                updatePayload.put("type", "NOTIFICATION_READ");
+                
+                messagingTemplate.convertAndSendToUser(
+                    notification.getUser().getId().toString(),
+                    "/queue/notifications",
+                    updatePayload
+                );
+            } catch (Exception e) {
+                System.err.println("WebSocket read update failed: " + e.getMessage());
+            }
+        }
+    }
+
+    public void markMultipleAsRead(List<Long> notificationIds) {
+        if (notificationIds != null && !notificationIds.isEmpty()) {
+            notificationRepository.markMultipleAsRead(notificationIds, LocalDateTime.now());
+            
+            // Send bulk update via WebSocket
+            try {
+                Map<String, Object> bulkUpdatePayload = new HashMap<>();
+                bulkUpdatePayload.put("notificationIds", notificationIds);
+                bulkUpdatePayload.put("read", true);
+                bulkUpdatePayload.put("readAt", LocalDateTime.now());
+                bulkUpdatePayload.put("type", "BULK_NOTIFICATIONS_READ");
+                
+                // Get the user ID from the first notification
+                Notification firstNotification = notificationRepository.findById(notificationIds.get(0)).orElse(null);
+                if (firstNotification != null) {
+                    messagingTemplate.convertAndSendToUser(
+                        firstNotification.getUser().getId().toString(),
+                        "/queue/notifications",
+                        bulkUpdatePayload
+                    );
+                }
+            } catch (Exception e) {
+                System.err.println("WebSocket bulk read update failed: " + e.getMessage());
+            }
+        }
+    }
+
+    public void markAllAsRead(Long userId) {
+        notificationRepository.markAllAsRead(userId, LocalDateTime.now());
+        
+        // Send bulk update via WebSocket
+        try {
+            Map<String, Object> bulkUpdatePayload = new HashMap<>();
+            bulkUpdatePayload.put("userId", userId);
+            bulkUpdatePayload.put("read", true);
+            bulkUpdatePayload.put("readAt", LocalDateTime.now());
+            bulkUpdatePayload.put("type", "ALL_NOTIFICATIONS_READ");
+            
             messagingTemplate.convertAndSendToUser(
-                notification.getUser().getId().toString(),
+                userId.toString(),
                 "/queue/notifications",
-                notification
+                bulkUpdatePayload
             );
+        } catch (Exception e) {
+            System.err.println("WebSocket all read update failed: " + e.getMessage());
         }
     }
 
     public void deleteNotification(Long notificationId) {
-        notificationRepository.deleteById(notificationId);
+        Notification notification = notificationRepository.findById(notificationId).orElse(null);
+        if (notification != null) {
+            Long userId = notification.getUser().getId();
+            notificationRepository.deleteById(notificationId);
+            
+            // Send real-time delete update via WebSocket
+            try {
+                Map<String, Object> deletePayload = new HashMap<>();
+                deletePayload.put("id", notificationId);
+                deletePayload.put("type", "NOTIFICATION_DELETED");
+                
+                messagingTemplate.convertAndSendToUser(
+                    userId.toString(),
+                    "/queue/notifications",
+                    deletePayload
+                );
+            } catch (Exception e) {
+                System.err.println("WebSocket delete update failed: " + e.getMessage());
+            }
+        }
+    }
+
+    public void deleteMultipleNotifications(List<Long> notificationIds) {
+        if (notificationIds != null && !notificationIds.isEmpty()) {
+            // Get user ID before deletion
+            Notification firstNotification = notificationRepository.findById(notificationIds.get(0)).orElse(null);
+            Long userId = firstNotification != null ? firstNotification.getUser().getId() : null;
+            
+            notificationRepository.deleteAllById(notificationIds);
+            
+            // Send bulk delete update via WebSocket
+            if (userId != null) {
+                try {
+                    Map<String, Object> bulkDeletePayload = new HashMap<>();
+                    bulkDeletePayload.put("notificationIds", notificationIds);
+                    bulkDeletePayload.put("type", "BULK_NOTIFICATIONS_DELETED");
+                    
+                    messagingTemplate.convertAndSendToUser(
+                        userId.toString(),
+                        "/queue/notifications",
+                        bulkDeletePayload
+                    );
+                } catch (Exception e) {
+                    System.err.println("WebSocket bulk delete update failed: " + e.getMessage());
+                }
+            }
+        }
     }
 } 

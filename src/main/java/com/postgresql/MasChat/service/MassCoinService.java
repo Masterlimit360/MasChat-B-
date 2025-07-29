@@ -6,11 +6,15 @@ import com.postgresql.MasChat.model.MassCoinTransferRequest;
 import com.postgresql.MasChat.model.Notification;
 import com.postgresql.MasChat.model.User;
 import com.postgresql.MasChat.model.UserWallet;
+import com.postgresql.MasChat.model.Post;
+import com.postgresql.MasChat.model.Reel;
 import com.postgresql.MasChat.repository.MassCoinTransactionRepository;
 import com.postgresql.MasChat.repository.MassCoinTransferRequestRepository;
 import com.postgresql.MasChat.repository.NotificationRepository;
 import com.postgresql.MasChat.repository.UserRepository;
 import com.postgresql.MasChat.repository.UserWalletRepository;
+import com.postgresql.MasChat.repository.PostRepository;
+import com.postgresql.MasChat.repository.ReelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +46,12 @@ public class MassCoinService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private ReelRepository reelRepository;
 
     // Initialize wallet with 1000 tokens for new users
     @Transactional
@@ -427,17 +437,52 @@ public class MassCoinService {
     // Tip creator (direct transfer)
     @Transactional
     public MassCoinDTO.TransactionInfo tipCreator(Long senderId, String postId, BigDecimal amount, String description) {
-        // Find post creator
-        // This would need to be implemented based on your post structure
-        // For now, we'll use a placeholder
-        User recipient = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("Recipient not found"));
+        User recipient = null;
+        String contentType = "POST";
+        
+        // Try to find as a post first
+        try {
+            Post post = postRepository.findById(Long.parseLong(postId))
+                .orElse(null);
+            if (post != null) {
+                recipient = post.getUser();
+                contentType = "POST";
+            }
+        } catch (NumberFormatException e) {
+            // postId is not a valid number, might be a reel ID or other format
+        }
+        
+        // If not found as post, try as reel
+        if (recipient == null) {
+            try {
+                Reel reel = reelRepository.findById(Long.parseLong(postId))
+                    .orElse(null);
+                if (reel != null) {
+                    recipient = reel.getUser();
+                    contentType = "REEL";
+                }
+            } catch (NumberFormatException e) {
+                // postId is not a valid number
+            }
+        }
+        
+        if (recipient == null) {
+            throw new RuntimeException("Content not found");
+        }
+        
+        // Check if sender is trying to tip themselves
+        if (senderId.equals(recipient.getId())) {
+            throw new RuntimeException("You cannot tip yourself");
+        }
         
         MassCoinDTO.TransferRequest request = new MassCoinDTO.TransferRequest();
         request.setRecipientId(recipient.getId());
         request.setAmount(amount);
         request.setMessage(description);
         request.setTransactionType(MassCoinTransaction.TransactionType.CONTENT_TIP);
-        request.setContextType(MassCoinTransferRequest.ContextType.POST);
+        request.setContextType(contentType.equals("POST") ? 
+            MassCoinTransferRequest.ContextType.POST : 
+            MassCoinTransferRequest.ContextType.REEL);
         request.setContextId(postId);
         
         return transferMass(senderId, request);

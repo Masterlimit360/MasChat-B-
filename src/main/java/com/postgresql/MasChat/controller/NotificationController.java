@@ -66,7 +66,7 @@ public class NotificationController {
     @PostMapping("/{notificationId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId) {
         try {
-            notificationRepository.markAsRead(notificationId, LocalDateTime.now());
+            notificationService.markAsRead(notificationId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -78,9 +78,7 @@ public class NotificationController {
     public ResponseEntity<Void> markMultipleAsRead(@RequestBody Map<String, List<Long>> request) {
         try {
             List<Long> notificationIds = request.get("notificationIds");
-            if (notificationIds != null && !notificationIds.isEmpty()) {
-                notificationRepository.markMultipleAsRead(notificationIds, LocalDateTime.now());
-            }
+            notificationService.markMultipleAsRead(notificationIds);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -91,18 +89,18 @@ public class NotificationController {
     @PostMapping("/mark-all-read")
     public ResponseEntity<Void> markAllAsRead(@RequestParam Long userId) {
         try {
-            notificationRepository.markAllAsRead(userId, LocalDateTime.now());
+            notificationService.markAllAsRead(userId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    // Delete notification
+    // Delete a notification
     @DeleteMapping("/{notificationId}")
     public ResponseEntity<Void> deleteNotification(@PathVariable Long notificationId) {
         try {
-            notificationRepository.softDelete(notificationId, LocalDateTime.now());
+            notificationService.deleteNotification(notificationId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -114,9 +112,7 @@ public class NotificationController {
     public ResponseEntity<Void> deleteMultipleNotifications(@RequestBody Map<String, List<Long>> request) {
         try {
             List<Long> notificationIds = request.get("notificationIds");
-            if (notificationIds != null && !notificationIds.isEmpty()) {
-                notificationRepository.softDeleteMultiple(notificationIds, LocalDateTime.now());
-            }
+            notificationService.deleteMultipleNotifications(notificationIds);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
