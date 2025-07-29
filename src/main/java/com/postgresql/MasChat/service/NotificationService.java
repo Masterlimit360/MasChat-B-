@@ -20,19 +20,50 @@ public class NotificationService {
     private SimpMessagingTemplate messagingTemplate;
 
     public Notification createNotification(User user, String message) {
+        return createNotification(user, "Notification", message, Notification.NotificationType.SYSTEM_MESSAGE);
+    }
+
+    public Notification createNotification(User user, String title, String message, Notification.NotificationType type) {
         Notification notification = new Notification();
         notification.setUser(user);
+        notification.setTitle(title);
         notification.setMessage(message);
+        notification.setNotificationType(type);
         notification.setRead(false);
         notification.setCreatedAt(java.time.LocalDateTime.now());
         Notification saved = notificationRepository.save(notification);
+        
         // Send via WebSocket
-        messagingTemplate.convertAndSendToUser(
-            user.getId().toString(),
-            "/queue/notifications",
-            saved
-        );
+        try {
+            messagingTemplate.convertAndSendToUser(
+                user.getId().toString(),
+                "/queue/notifications",
+                saved
+            );
+        } catch (Exception e) {
+            // Log WebSocket error but don't fail the notification creation
+            System.err.println("WebSocket notification failed: " + e.getMessage());
+        }
+        
         return saved;
+    }
+
+    public Notification createFriendRequestNotification(User sender, User receiver) {
+        return createNotification(
+            receiver,
+            "Friend Request",
+            sender.getFullName() + " sent you a friend request.",
+            Notification.NotificationType.FRIEND_REQUEST
+        );
+    }
+
+    public Notification createFriendRequestAcceptedNotification(User receiver, User sender) {
+        return createNotification(
+            sender,
+            "Friend Request Accepted",
+            receiver.getFullName() + " accepted your friend request.",
+            Notification.NotificationType.FRIEND_REQUEST
+        );
     }
 
     public List<Notification> getNotifications(User user) {

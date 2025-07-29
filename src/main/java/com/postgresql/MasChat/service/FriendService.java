@@ -58,11 +58,26 @@ public class FriendService {
     public void sendFriendRequest(Long senderId, Long receiverId) {
         User sender = userRepository.findById(senderId).orElse(null);
         User receiver = userRepository.findById(receiverId).orElse(null);
-        if (sender == null || receiver == null) return;
+        if (sender == null || receiver == null) {
+            throw new IllegalArgumentException("Sender or receiver not found");
+        }
+        
+        // Check if they are already friends
+        if (sender.getFriends().contains(receiver)) {
+            throw new IllegalStateException("Users are already friends");
+        }
         
         // Check if request already exists
         List<FriendRequest> existingRequests = friendRequestRepository.findBySenderIdAndReceiverId(senderId, receiverId);
-        if (!existingRequests.isEmpty()) return; // Request already exists
+        if (!existingRequests.isEmpty()) {
+            throw new IllegalStateException("Friend request already exists");
+        }
+        
+        // Check if reverse request exists
+        List<FriendRequest> reverseRequests = friendRequestRepository.findBySenderIdAndReceiverId(receiverId, senderId);
+        if (!reverseRequests.isEmpty()) {
+            throw new IllegalStateException("Friend request already exists");
+        }
         
         FriendRequest request = new FriendRequest();
         request.setSender(sender);
@@ -72,7 +87,7 @@ public class FriendService {
         friendRequestRepository.save(request);
         
         // Notify receiver
-        notificationService.createNotification(receiver, sender.getFullName() + " sent you a friend request.");
+        notificationService.createFriendRequestNotification(sender, receiver);
     }
 
     public void acceptFriendRequest(Long requestId) {
@@ -92,8 +107,7 @@ public class FriendService {
         userRepository.save(receiver);
         
         // Notify sender that request was accepted
-        notificationService.createNotification(sender, receiver.getFullName() + " accepted your friend request.");
-        // Optionally, mark the original notification as read or update it
+        notificationService.createFriendRequestAcceptedNotification(receiver, sender);
     }
 
     public List<User> getFriends(Long userId) {
@@ -102,8 +116,53 @@ public class FriendService {
         return user.getFriends();
     }
 
+    public void removeFriend(Long userId, Long friendId) {
+        User user = userRepository.findById(userId).orElse(null);
+        User friend = userRepository.findById(friendId).orElse(null);
+        if (user == null || friend == null) return;
+        
+        // Remove from both users' friend lists
+        user.getFriends().removeIf(f -> f.getId().equals(friendId));
+        friend.getFriends().removeIf(f -> f.getId().equals(userId));
+        
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
+
+    public String getFriendRequestStatus(Long senderId, Long receiverId) {
+        User sender = userRepository.findById(senderId).orElse(null);
+        User receiver = userRepository.findById(receiverId).orElse(null);
+        if (sender == null || receiver == null) return "NONE";
+        
+        // Check if they are already friends
+        if (sender.getFriends().contains(receiver)) {
+            return "FRIENDS";
+        }
+        
+        // Check if request exists from sender to receiver
+        List<FriendRequest> requests = friendRequestRepository.findBySenderIdAndReceiverId(senderId, receiverId);
+        if (!requests.isEmpty()) {
+            return "SENT";
+        }
+        
+        // Check if request exists from receiver to sender
+        List<FriendRequest> reverseRequests = friendRequestRepository.findBySenderIdAndReceiverId(receiverId, senderId);
+        if (!reverseRequests.isEmpty()) {
+            return "RECEIVED";
+        }
+        
+        return "NONE";
+    }
+
     public void deleteFriendRequest(Long requestId) {
         friendRequestRepository.deleteById(requestId);
+    }
+
+    public void cancelFriendRequest(Long senderId, Long receiverId) {
+        List<FriendRequest> requests = friendRequestRepository.findBySenderIdAndReceiverId(senderId, receiverId);
+        if (!requests.isEmpty()) {
+            friendRequestRepository.deleteAll(requests);
+        }
     }
 
     public void unfriend(Long userId, Long friendId) {

@@ -9,6 +9,7 @@ import com.postgresql.MasChat.service.FriendService;
 import com.postgresql.MasChat.dto.FriendRequestDTO;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -49,6 +50,15 @@ public class FriendController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/cancel")
+    public ResponseEntity<Void> cancelFriendRequest(
+        @RequestParam Long senderId,
+        @RequestParam Long receiverId
+    ) {
+        friendService.cancelFriendRequest(senderId, receiverId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/pending/{userId}")
     public ResponseEntity<List<FriendRequestDTO>> getPendingRequests(@PathVariable Long userId) {
         List<FriendRequest> requests = friendService.getFriendRequests(userId);
@@ -58,9 +68,12 @@ public class FriendController {
         return ResponseEntity.ok(dtos);
     }
 
-    @DeleteMapping("/remove")
-    public ResponseEntity<Void> unfriend(@RequestParam Long userId, @RequestParam Long friendId) {
-        friendService.unfriend(userId, friendId);
-        return ResponseEntity.ok().build();
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, String>> getFriendRequestStatus(
+        @RequestParam Long senderId,
+        @RequestParam Long receiverId
+    ) {
+        String status = friendService.getFriendRequestStatus(senderId, receiverId);
+        return ResponseEntity.ok(Map.of("status", status));
     }
 }
