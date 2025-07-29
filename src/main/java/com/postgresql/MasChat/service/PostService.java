@@ -16,6 +16,8 @@ public class PostService {
     private UserRepository userRepository;
     @Autowired
     private CommentRepository commentRepository;
+    @Autowired
+    private LikeRepository likeRepository;
 
     public Post createPost(PostRequestDto dto, Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
@@ -62,6 +64,51 @@ public class PostService {
         return commentRepository.save(comment);
     }
 
+    public Comment addReply(Long postId, Long userId, Long parentCommentId, String content) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
+        Comment parentComment = commentRepository.findById(parentCommentId).orElseThrow();
+        
+        Comment reply = new Comment();
+        reply.setPost(post);
+        reply.setUser(user);
+        reply.setContent(content);
+        reply.setParentComment(parentComment);
+        reply.setCreatedAt(java.time.LocalDateTime.now());
+        return commentRepository.save(reply);
+    }
+
+    public Comment likeComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
+        
+        // Check if user already liked this comment
+        if (comment.isLikedByUser(userId)) {
+            throw new RuntimeException("User already liked this comment");
+        }
+        
+        Like like = new Like();
+        like.setComment(comment);
+        like.setUser(user);
+        like.setCreatedAt(java.time.LocalDateTime.now());
+        likeRepository.save(like);
+        
+        return comment;
+    }
+
+    public Comment unlikeComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
+        
+        // Find and remove the like
+        Like like = likeRepository.findByCommentAndUser(comment, user);
+        if (like != null) {
+            likeRepository.delete(like);
+        }
+        
+        return comment;
+    }
+
     public List<Post> searchPosts(String query) {
         return postRepository.findByContentContainingIgnoreCase(query);
     }
@@ -76,11 +123,34 @@ public class PostService {
     }
 
     public java.util.List<CommentDTO> getComments(Long postId) {
+        return getComments(postId, null);
+    }
+
+    public java.util.List<CommentDTO> getComments(Long postId, Long currentUserId) {
         Post post = postRepository.findById(postId).orElseThrow();
-        java.util.List<Comment> comments = commentRepository.findByPost(post);
+        java.util.List<Comment> topLevelComments = commentRepository.findTopLevelCommentsByPost(post);
+        java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
+        for (Comment c : topLevelComments) {
+            dtos.add(CommentDTO.fromEntity(c, currentUserId));
+        }
+        return dtos;
+    }
+
+    public java.util.List<CommentDTO> searchComments(Long postId, String searchTerm, Long currentUserId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        java.util.List<Comment> comments = commentRepository.searchCommentsByContent(post, searchTerm);
         java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
         for (Comment c : comments) {
-            dtos.add(CommentDTO.fromEntity(c));
+            dtos.add(CommentDTO.fromEntity(c, currentUserId));
+        }
+        return dtos;
+    }
+
+    public java.util.List<CommentDTO> getCommentReplies(Long commentId, Long currentUserId) {
+        java.util.List<Comment> replies = commentRepository.findRepliesByParentCommentId(commentId);
+        java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
+        for (Comment c : replies) {
+            dtos.add(CommentDTO.fromEntity(c, currentUserId));
         }
         return dtos;
     }

@@ -18,7 +18,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     
     // Get messages between two users
     @Query("SELECT m FROM Message m WHERE (m.sender.id = :userId1 AND m.recipient.id = :userId2) OR (m.sender.id = :userId2 AND m.recipient.id = :userId1) ORDER BY m.sentAt DESC")
-    List<Message> findBySenderIdOrRecipientIdOrderBySentAtDesc(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+    List<Message> findConversationBetweenUsers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
     
     // Get unread messages from a specific sender to a recipient
     @Query("SELECT m FROM Message m WHERE m.recipient.id = :recipientId AND m.sender.id = :senderId AND m.read = false")

@@ -86,9 +86,7 @@ public class MessageService {
     public List<Message> getConversation(Long userId1, Long userId2) {
         User user1 = userRepository.findById(userId1).orElseThrow();
         User user2 = userRepository.findById(userId2).orElseThrow();
-        List<Message> messages = messageRepository.findBySenderAndRecipientOrSenderAndRecipientOrderBySentAt(
-            user1, user2, user2, user1
-        );
+        List<Message> messages = messageRepository.findConversationBetweenUsers(userId1, userId2);
         // Deduplicate by id
         LinkedHashMap<Long, Message> unique = new LinkedHashMap<>();
         for (Message m : messages) unique.put(m.getId(), m);

@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.postgresql.MasChat.model.Like;
+import com.postgresql.MasChat.model.Comment;
+import com.postgresql.MasChat.model.User;
 import java.util.List;
 
 public interface LikeRepository extends JpaRepository<Like, Long> {
@@ -22,4 +24,8 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     
     @Query("SELECT COUNT(l) FROM Like l WHERE l.post.user.id = :postUserId")
     long countByPostUserId(@Param("postUserId") Long postUserId);
+    
+    // Find like by comment and user
+    @Query("SELECT l FROM Like l WHERE l.comment = :comment AND l.user = :user")
+    Like findByCommentAndUser(@Param("comment") Comment comment, @Param("user") User user);
 } 

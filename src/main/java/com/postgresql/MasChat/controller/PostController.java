@@ -1,6 +1,7 @@
 package com.postgresql.MasChat.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -58,8 +59,31 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/comment")
-    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestParam Long userId, @RequestBody String text) {
-        return ResponseEntity.ok(postService.addComment(postId, userId, text));
+    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestParam Long userId, @RequestBody Map<String, String> request) {
+        String content = request.get("content");
+        if (content == null || content.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(postService.addComment(postId, userId, content));
+    }
+
+    @PostMapping("/{postId}/comment/{parentCommentId}/reply")
+    public ResponseEntity<Comment> addReply(@PathVariable Long postId, @PathVariable Long parentCommentId, @RequestParam Long userId, @RequestBody Map<String, String> request) {
+        String content = request.get("content");
+        if (content == null || content.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(postService.addReply(postId, userId, parentCommentId, content));
+    }
+
+    @PostMapping("/comment/{commentId}/like")
+    public ResponseEntity<Comment> likeComment(@PathVariable Long commentId, @RequestParam Long userId) {
+        return ResponseEntity.ok(postService.likeComment(commentId, userId));
+    }
+
+    @PostMapping("/comment/{commentId}/unlike")
+    public ResponseEntity<Comment> unlikeComment(@PathVariable Long commentId, @RequestParam Long userId) {
+        return ResponseEntity.ok(postService.unlikeComment(commentId, userId));
     }
 
     @DeleteMapping("/{postId}")
@@ -69,8 +93,20 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<java.util.List<CommentDTO>> getComments(@PathVariable Long postId) {
-        java.util.List<CommentDTO> comments = postService.getComments(postId);
+    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long postId, @RequestParam(required = false) Long currentUserId) {
+        List<CommentDTO> comments = postService.getComments(postId, currentUserId);
         return ResponseEntity.ok(comments);
+    }
+
+    @GetMapping("/{postId}/comments/search")
+    public ResponseEntity<List<CommentDTO>> searchComments(@PathVariable Long postId, @RequestParam String searchTerm, @RequestParam(required = false) Long currentUserId) {
+        List<CommentDTO> comments = postService.searchComments(postId, searchTerm, currentUserId);
+        return ResponseEntity.ok(comments);
+    }
+
+    @GetMapping("/comment/{commentId}/replies")
+    public ResponseEntity<List<CommentDTO>> getCommentReplies(@PathVariable Long commentId, @RequestParam(required = false) Long currentUserId) {
+        List<CommentDTO> replies = postService.getCommentReplies(commentId, currentUserId);
+        return ResponseEntity.ok(replies);
     }
 }

@@ -1,6 +1,8 @@
 package com.postgresql.MasChat.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CommentDTO {
     private Long id;
@@ -9,6 +11,12 @@ public class CommentDTO {
     private String profilePicture;
     private String content;
     private LocalDateTime createdAt;
+    private Long parentCommentId;
+    private List<CommentDTO> replies;
+    private int likeCount;
+    private int replyCount;
+    private boolean isLikedByCurrentUser;
+    private String timeAgo;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -22,8 +30,24 @@ public class CommentDTO {
     public void setContent(String content) { this.content = content; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getParentCommentId() { return parentCommentId; }
+    public void setParentCommentId(Long parentCommentId) { this.parentCommentId = parentCommentId; }
+    public List<CommentDTO> getReplies() { return replies; }
+    public void setReplies(List<CommentDTO> replies) { this.replies = replies; }
+    public int getLikeCount() { return likeCount; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
+    public int getReplyCount() { return replyCount; }
+    public void setReplyCount(int replyCount) { this.replyCount = replyCount; }
+    public boolean isLikedByCurrentUser() { return isLikedByCurrentUser; }
+    public void setLikedByCurrentUser(boolean isLikedByCurrentUser) { this.isLikedByCurrentUser = isLikedByCurrentUser; }
+    public String getTimeAgo() { return timeAgo; }
+    public void setTimeAgo(String timeAgo) { this.timeAgo = timeAgo; }
 
     public static CommentDTO fromEntity(com.postgresql.MasChat.model.Comment comment) {
+        return fromEntity(comment, null);
+    }
+
+    public static CommentDTO fromEntity(com.postgresql.MasChat.model.Comment comment, Long currentUserId) {
         if (comment == null) return null;
         CommentDTO dto = new CommentDTO();
         dto.setId(comment.getId());
@@ -32,6 +56,33 @@ public class CommentDTO {
         dto.setProfilePicture(comment.getUser() != null ? comment.getUser().getProfilePicture() : null);
         dto.setContent(comment.getContent());
         dto.setCreatedAt(comment.getCreatedAt());
+        dto.setParentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null);
+        dto.setLikeCount(comment.getLikeCount());
+        dto.setReplyCount(comment.getReplyCount());
+        dto.setLikedByCurrentUser(currentUserId != null && comment.isLikedByUser(currentUserId));
+        dto.setTimeAgo(formatTimeAgo(comment.getCreatedAt()));
+        
+        // Convert replies to DTOs
+        if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+            dto.setReplies(comment.getReplies().stream()
+                .map(reply -> fromEntity(reply, currentUserId))
+                .collect(Collectors.toList()));
+        }
+        
         return dto;
+    }
+
+    private static String formatTimeAgo(LocalDateTime createdAt) {
+        if (createdAt == null) return "";
+        
+        LocalDateTime now = LocalDateTime.now();
+        long seconds = java.time.Duration.between(createdAt, now).getSeconds();
+        
+        if (seconds < 60) return seconds + "s";
+        if (seconds < 3600) return (seconds / 60) + "m";
+        if (seconds < 86400) return (seconds / 3600) + "h";
+        if (seconds < 2592000) return (seconds / 86400) + "d";
+        if (seconds < 31536000) return (seconds / 2592000) + "mo";
+        return (seconds / 31536000) + "y";
     }
 } 
