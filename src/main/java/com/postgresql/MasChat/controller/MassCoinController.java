@@ -1,6 +1,8 @@
 package com.postgresql.MasChat.controller;
 
 import com.postgresql.MasChat.dto.MassCoinDTO;
+import com.postgresql.MasChat.model.User;
+import com.postgresql.MasChat.repository.UserRepository;
 import com.postgresql.MasChat.service.MassCoinService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,9 @@ public class MassCoinController {
 
     @Autowired
     private MassCoinService massCoinService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // Wallet endpoints
     @GetMapping("/wallet")
@@ -190,5 +195,41 @@ public class MassCoinController {
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> healthCheck() {
         return ResponseEntity.ok(Map.of("status", "healthy", "service", "MassCoin"));
+    }
+
+    // User search endpoint
+    @GetMapping("/search-users")
+    public ResponseEntity<List<MassCoinDTO.UserSearchResult>> searchUsers(
+            @RequestParam String query,
+            @RequestParam Long currentUserId) {
+        try {
+            List<MassCoinDTO.UserSearchResult> results = massCoinService.searchUsers(query, currentUserId);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Get user statistics
+    @GetMapping("/user-stats")
+    public ResponseEntity<MassCoinDTO.UserStats> getUserStats(@RequestParam Long userId) {
+        try {
+            MassCoinDTO.UserStats stats = massCoinService.getUserStats(userId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Test endpoint to create wallet
+    @PostMapping("/create-wallet")
+    public ResponseEntity<MassCoinDTO.WalletInfo> createWallet(@RequestParam Long userId) {
+        try {
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            MassCoinDTO.WalletInfo wallet = massCoinService.createWallet(user);
+            return ResponseEntity.ok(wallet);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 } 

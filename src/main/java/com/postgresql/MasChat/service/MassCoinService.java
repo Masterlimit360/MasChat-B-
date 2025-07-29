@@ -343,10 +343,85 @@ public class MassCoinService {
     // Get transactions for a user
     public Page<MassCoinDTO.TransactionInfo> getUserTransactions(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<MassCoinTransaction> transactions = transactionRepository.findBySenderIdOrRecipientIdOrderByCreatedAtDesc(
-            userId, userId, pageable
-        );
+        Page<MassCoinTransaction> transactions = transactionRepository.findBySenderIdOrRecipientIdOrderByCreatedAtDesc(userId, pageable);
         return transactions.map(MassCoinDTO.TransactionInfo::new);
+    }
+
+    // Get user statistics
+    public MassCoinDTO.UserStats getUserStats(Long userId) {
+        MassCoinDTO.UserStats stats = new MassCoinDTO.UserStats();
+        
+        // Get total transactions
+        long totalTransactions = transactionRepository.countBySenderIdOrRecipientId(userId);
+        stats.setTotalTransactions(totalTransactions);
+        
+        // Get total volume
+        BigDecimal totalVolume = transactionRepository.getTotalVolumeByUserId(userId);
+        stats.setTotalVolume(totalVolume != null ? totalVolume : BigDecimal.ZERO);
+        
+        // Get average transaction amount
+        BigDecimal avgAmount = transactionRepository.getAverageTransactionAmountByUserId(userId);
+        stats.setAverageTransactionAmount(avgAmount != null ? avgAmount : BigDecimal.ZERO);
+        
+        // Get tips received
+        long tipsReceived = transactionRepository.countByRecipientIdAndTransactionType(userId, MassCoinTransaction.TransactionType.CONTENT_TIP);
+        stats.setTotalTipsReceived(tipsReceived);
+        
+        // Get total tips amount received
+        BigDecimal tipsAmount = transactionRepository.getTotalTipsAmountReceivedByUserId(userId);
+        stats.setTotalTipsAmount(tipsAmount != null ? tipsAmount : BigDecimal.ZERO);
+        
+        // Get tips sent
+        long tipsSent = transactionRepository.countBySenderIdAndTransactionType(userId, MassCoinTransaction.TransactionType.CONTENT_TIP);
+        stats.setTotalTipsSent(tipsSent);
+        
+        // Get total tips amount sent
+        BigDecimal tipsSentAmount = transactionRepository.getTotalTipsAmountSentByUserId(userId);
+        stats.setTotalTipsSentAmount(tipsSentAmount != null ? tipsSentAmount : BigDecimal.ZERO);
+        
+        return stats;
+    }
+
+    // Search users by ID, username, or fullname
+    public List<MassCoinDTO.UserSearchResult> searchUsers(String query, Long currentUserId) {
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        
+        String searchQuery = query.trim().toLowerCase();
+        
+        // Try to find by ID first
+        try {
+            Long userId = Long.parseLong(searchQuery);
+            Optional<User> userById = userRepository.findById(userId);
+            if (userById.isPresent() && !userById.get().getId().equals(currentUserId)) {
+                User user = userById.get();
+                return List.of(new MassCoinDTO.UserSearchResult(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getFullName(),
+                    user.getProfilePicture(),
+                    user.getEmail()
+                ));
+            }
+        } catch (NumberFormatException e) {
+            // Not a valid ID, continue with username/fullname search
+        }
+        
+        // Search by username or fullname
+        List<User> users = userRepository.findByUsernameContainingIgnoreCaseOrFullNameContainingIgnoreCase(searchQuery, searchQuery);
+        
+        return users.stream()
+            .filter(user -> !user.getId().equals(currentUserId)) // Exclude current user
+            .map(user -> new MassCoinDTO.UserSearchResult(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getProfilePicture(),
+                user.getEmail()
+            ))
+            .limit(10) // Limit results
+            .toList();
     }
 
     // Tip creator (direct transfer)

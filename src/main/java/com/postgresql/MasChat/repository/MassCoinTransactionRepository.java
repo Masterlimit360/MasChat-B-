@@ -83,4 +83,36 @@ public interface MassCoinTransactionRepository extends JpaRepository<MassCoinTra
     Object[] getUserTransactionStats(@Param("user") User user);
 
     Page<MassCoinTransaction> findBySenderIdOrRecipientIdOrderByCreatedAtDesc(Long senderId, Long recipientId, Pageable pageable);
+    
+    // Count transactions by sender or recipient
+    @Query("SELECT COUNT(t) FROM MassCoinTransaction t WHERE t.sender.id = :userId OR t.recipient.id = :userId")
+    long countBySenderIdOrRecipientId(@Param("userId") Long userId);
+    
+    // Get total volume by user ID
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM MassCoinTransaction t WHERE (t.sender.id = :userId OR t.recipient.id = :userId) AND t.status = 'CONFIRMED'")
+    BigDecimal getTotalVolumeByUserId(@Param("userId") Long userId);
+    
+    // Get average transaction amount by user ID
+    @Query("SELECT COALESCE(AVG(t.amount), 0) FROM MassCoinTransaction t WHERE (t.sender.id = :userId OR t.recipient.id = :userId) AND t.status = 'CONFIRMED'")
+    BigDecimal getAverageTransactionAmountByUserId(@Param("userId") Long userId);
+    
+    // Count tips received by user ID
+    @Query("SELECT COUNT(t) FROM MassCoinTransaction t WHERE t.recipient.id = :userId AND t.transactionType = :type")
+    long countByRecipientIdAndTransactionType(@Param("userId") Long userId, @Param("type") MassCoinTransaction.TransactionType type);
+    
+    // Get total tips amount received by user ID
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM MassCoinTransaction t WHERE t.recipient.id = :userId AND t.transactionType = :type AND t.status = 'CONFIRMED'")
+    BigDecimal getTotalTipsAmountReceivedByUserId(@Param("userId") Long userId);
+    
+    // Count tips sent by user ID
+    @Query("SELECT COUNT(t) FROM MassCoinTransaction t WHERE t.sender.id = :userId AND t.transactionType = :type")
+    long countBySenderIdAndTransactionType(@Param("userId") Long userId, @Param("type") MassCoinTransaction.TransactionType type);
+    
+    // Get total tips amount sent by user ID
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM MassCoinTransaction t WHERE t.sender.id = :userId AND t.transactionType = :type AND t.status = 'CONFIRMED'")
+    BigDecimal getTotalTipsAmountSentByUserId(@Param("userId") Long userId);
+    
+    // Find transactions by sender ID or recipient ID with pagination
+    @Query("SELECT t FROM MassCoinTransaction t WHERE t.sender.id = :userId OR t.recipient.id = :userId ORDER BY t.createdAt DESC")
+    Page<MassCoinTransaction> findBySenderIdOrRecipientIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
 } 
