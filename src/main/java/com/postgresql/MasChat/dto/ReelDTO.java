@@ -24,10 +24,19 @@ public class ReelDTO {
         dto.setUserId(reel.getUser().getId());
         dto.setUsername(reel.getUser().getUsername());
         dto.setProfilePicture(reel.getUser().getProfilePicture());
-        dto.setMediaUrl(reel.getMediaUrl());
-        dto.setVideoUrl(reel.getMediaUrl());
+        
+        // Set media URL - this is the main field for media content
+        String mediaUrl = reel.getMediaUrl();
+        dto.setMediaUrl(mediaUrl);
+        
+        // For backward compatibility, also set videoUrl to the same value
+        // This allows frontend to use either field
+        dto.setVideoUrl(mediaUrl);
+        
         dto.setCaption(reel.getCaption());
         dto.setCreatedAt(reel.getCreatedAt().toString());
+        
+        System.out.println("ReelDTO created - ID: " + dto.getId() + ", Media URL: " + mediaUrl);
         
         // Convert likedBy Set<User> to List<Long>
         if (reel.getLikedBy() != null) {
