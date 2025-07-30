@@ -378,7 +378,7 @@ public class MassCoinService {
         stats.setTotalTipsReceived(tipsReceived);
         
         // Get total tips amount received
-        BigDecimal tipsAmount = transactionRepository.getTotalTipsAmountReceivedByUserId(userId);
+        BigDecimal tipsAmount = transactionRepository.getTotalTipsAmountReceivedByUserId(userId, MassCoinTransaction.TransactionType.CONTENT_TIP);
         stats.setTotalTipsAmount(tipsAmount != null ? tipsAmount : BigDecimal.ZERO);
         
         // Get tips sent
@@ -386,7 +386,7 @@ public class MassCoinService {
         stats.setTotalTipsSent(tipsSent);
         
         // Get total tips amount sent
-        BigDecimal tipsSentAmount = transactionRepository.getTotalTipsAmountSentByUserId(userId);
+        BigDecimal tipsSentAmount = transactionRepository.getTotalTipsAmountSentByUserId(userId, MassCoinTransaction.TransactionType.CONTENT_TIP);
         stats.setTotalTipsSentAmount(tipsSentAmount != null ? tipsSentAmount : BigDecimal.ZERO);
         
         return stats;

@@ -102,7 +102,7 @@ public interface MassCoinTransactionRepository extends JpaRepository<MassCoinTra
     
     // Get total tips amount received by user ID
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM MassCoinTransaction t WHERE t.recipient.id = :userId AND t.transactionType = :type AND t.status = 'CONFIRMED'")
-    BigDecimal getTotalTipsAmountReceivedByUserId(@Param("userId") Long userId);
+    BigDecimal getTotalTipsAmountReceivedByUserId(@Param("userId") Long userId, @Param("type") MassCoinTransaction.TransactionType type);
     
     // Count tips sent by user ID
     @Query("SELECT COUNT(t) FROM MassCoinTransaction t WHERE t.sender.id = :userId AND t.transactionType = :type")
@@ -110,7 +110,7 @@ public interface MassCoinTransactionRepository extends JpaRepository<MassCoinTra
     
     // Get total tips amount sent by user ID
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM MassCoinTransaction t WHERE t.sender.id = :userId AND t.transactionType = :type AND t.status = 'CONFIRMED'")
-    BigDecimal getTotalTipsAmountSentByUserId(@Param("userId") Long userId);
+    BigDecimal getTotalTipsAmountSentByUserId(@Param("userId") Long userId, @Param("type") MassCoinTransaction.TransactionType type);
     
     // Find transactions by sender ID or recipient ID with pagination
     @Query("SELECT t FROM MassCoinTransaction t WHERE t.sender.id = :userId OR t.recipient.id = :userId ORDER BY t.createdAt DESC")
