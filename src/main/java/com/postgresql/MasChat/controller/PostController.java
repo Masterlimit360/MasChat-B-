@@ -93,20 +93,50 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long postId, @RequestParam(required = false) Long currentUserId) {
-        List<CommentDTO> comments = postService.getComments(postId, currentUserId);
-        return ResponseEntity.ok(comments);
+    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long postId, @RequestParam(required = false) String currentUserId) {
+        try {
+            Long userId = currentUserId != null ? Long.valueOf(currentUserId) : null;
+            List<CommentDTO> comments = postService.getComments(postId, userId);
+            return ResponseEntity.ok(comments);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid currentUserId format: " + currentUserId);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("Error getting comments for post " + postId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/{postId}/comments/search")
-    public ResponseEntity<List<CommentDTO>> searchComments(@PathVariable Long postId, @RequestParam String searchTerm, @RequestParam(required = false) Long currentUserId) {
-        List<CommentDTO> comments = postService.searchComments(postId, searchTerm, currentUserId);
-        return ResponseEntity.ok(comments);
+    public ResponseEntity<List<CommentDTO>> searchComments(@PathVariable Long postId, @RequestParam String searchTerm, @RequestParam(required = false) String currentUserId) {
+        try {
+            Long userId = currentUserId != null ? Long.valueOf(currentUserId) : null;
+            List<CommentDTO> comments = postService.searchComments(postId, searchTerm, userId);
+            return ResponseEntity.ok(comments);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid currentUserId format: " + currentUserId);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("Error searching comments for post " + postId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/comment/{commentId}/replies")
-    public ResponseEntity<List<CommentDTO>> getCommentReplies(@PathVariable Long commentId, @RequestParam(required = false) Long currentUserId) {
-        List<CommentDTO> replies = postService.getCommentReplies(commentId, currentUserId);
-        return ResponseEntity.ok(replies);
+    public ResponseEntity<List<CommentDTO>> getCommentReplies(@PathVariable Long commentId, @RequestParam(required = false) String currentUserId) {
+        try {
+            Long userId = currentUserId != null ? Long.valueOf(currentUserId) : null;
+            List<CommentDTO> replies = postService.getCommentReplies(commentId, userId);
+            return ResponseEntity.ok(replies);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid currentUserId format: " + currentUserId);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("Error getting replies for comment " + commentId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 }

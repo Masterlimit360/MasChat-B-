@@ -127,13 +127,24 @@ public class PostService {
     }
 
     public java.util.List<CommentDTO> getComments(Long postId, Long currentUserId) {
-        Post post = postRepository.findById(postId).orElseThrow();
-        java.util.List<Comment> topLevelComments = commentRepository.findTopLevelCommentsByPost(post);
-        java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
-        for (Comment c : topLevelComments) {
-            dtos.add(CommentDTO.fromEntity(c, currentUserId));
+        try {
+            Post post = postRepository.findById(postId).orElseThrow();
+            java.util.List<Comment> topLevelComments = commentRepository.findTopLevelCommentsByPost(post);
+            java.util.List<CommentDTO> dtos = new java.util.ArrayList<>();
+            for (Comment c : topLevelComments) {
+                try {
+                    dtos.add(CommentDTO.fromEntity(c, currentUserId));
+                } catch (Exception e) {
+                    System.err.println("Error converting comment to DTO: " + e.getMessage());
+                    // Continue with other comments
+                }
+            }
+            return dtos;
+        } catch (Exception e) {
+            System.err.println("Error getting comments for post " + postId + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-        return dtos;
     }
 
     public java.util.List<CommentDTO> searchComments(Long postId, String searchTerm, Long currentUserId) {

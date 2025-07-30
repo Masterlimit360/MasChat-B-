@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "reels")
@@ -15,6 +16,7 @@ public class Reel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @Column(name = "video_url")
@@ -28,9 +30,11 @@ public class Reel {
         joinColumns = @JoinColumn(name = "reel_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @JsonIgnore
     private Set<User> likedBy = new HashSet<>();
 
     @OneToMany(mappedBy = "reel", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ReelComment> comments;
 
     private int shareCount = 0;

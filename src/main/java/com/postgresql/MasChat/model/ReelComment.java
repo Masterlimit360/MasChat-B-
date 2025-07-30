@@ -2,6 +2,7 @@ package com.postgresql.MasChat.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "reel_comments")
@@ -12,10 +13,12 @@ public class ReelComment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reel_id")
+    @JsonIgnore
     private Reel reel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     private String content;

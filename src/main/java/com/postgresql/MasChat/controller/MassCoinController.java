@@ -131,9 +131,24 @@ public class MassCoinController {
             @RequestParam BigDecimal amount,
             @RequestParam(required = false) String description) {
         try {
+            System.out.println("=== DEBUG: Tip request received ===");
+            System.out.println("Sender ID: " + senderId);
+            System.out.println("Post ID: " + postId);
+            System.out.println("Amount: " + amount);
+            System.out.println("Description: " + description);
+            
             MassCoinDTO.TransactionInfo transaction = massCoinService.tipCreator(senderId, postId, amount, description);
+            System.out.println("=== DEBUG: Tip successful ===");
             return ResponseEntity.ok(transaction);
+        } catch (RuntimeException e) {
+            System.err.println("=== ERROR: Tip failed with RuntimeException ===");
+            System.err.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            System.err.println("=== ERROR: Tip failed with Exception ===");
+            System.err.println("Error message: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

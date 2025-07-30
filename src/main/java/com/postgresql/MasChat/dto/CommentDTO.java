@@ -49,27 +49,43 @@ public class CommentDTO {
 
     public static CommentDTO fromEntity(com.postgresql.MasChat.model.Comment comment, Long currentUserId) {
         if (comment == null) return null;
-        CommentDTO dto = new CommentDTO();
-        dto.setId(comment.getId());
-        dto.setUserId(comment.getUser() != null ? comment.getUser().getId() : null);
-        dto.setUsername(comment.getUser() != null ? comment.getUser().getUsername() : null);
-        dto.setProfilePicture(comment.getUser() != null ? comment.getUser().getProfilePicture() : null);
-        dto.setContent(comment.getContent());
-        dto.setCreatedAt(comment.getCreatedAt());
-        dto.setParentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null);
-        dto.setLikeCount(comment.getLikeCount());
-        dto.setReplyCount(comment.getReplyCount());
-        dto.setLikedByCurrentUser(currentUserId != null && comment.isLikedByUser(currentUserId));
-        dto.setTimeAgo(formatTimeAgo(comment.getCreatedAt()));
-        
-        // Convert replies to DTOs
-        if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
-            dto.setReplies(comment.getReplies().stream()
-                .map(reply -> fromEntity(reply, currentUserId))
-                .collect(Collectors.toList()));
+        try {
+            CommentDTO dto = new CommentDTO();
+            dto.setId(comment.getId());
+            dto.setUserId(comment.getUser() != null ? comment.getUser().getId() : null);
+            dto.setUsername(comment.getUser() != null ? comment.getUser().getUsername() : null);
+            dto.setProfilePicture(comment.getUser() != null ? comment.getUser().getProfilePicture() : null);
+            dto.setContent(comment.getContent());
+            dto.setCreatedAt(comment.getCreatedAt());
+            dto.setParentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null);
+            dto.setLikeCount(comment.getLikeCount());
+            dto.setReplyCount(comment.getReplyCount());
+            dto.setLikedByCurrentUser(currentUserId != null && comment.isLikedByUser(currentUserId));
+            dto.setTimeAgo(formatTimeAgo(comment.getCreatedAt()));
+            
+            // Convert replies to DTOs
+            if (comment.getReplies() != null && !comment.getReplies().isEmpty()) {
+                dto.setReplies(comment.getReplies().stream()
+                    .map(reply -> fromEntity(reply, currentUserId))
+                    .filter(reply -> reply != null) // Filter out null replies
+                    .collect(Collectors.toList()));
+            }
+            
+            return dto;
+        } catch (Exception e) {
+            System.err.println("Error converting comment to DTO: " + e.getMessage());
+            e.printStackTrace();
+            // Return a minimal DTO with error information
+            CommentDTO errorDto = new CommentDTO();
+            errorDto.setId(comment.getId());
+            errorDto.setContent("Error loading comment");
+            errorDto.setUsername("Unknown");
+            errorDto.setLikeCount(0);
+            errorDto.setReplyCount(0);
+            errorDto.setLikedByCurrentUser(false);
+            errorDto.setTimeAgo("");
+            return errorDto;
         }
-        
-        return dto;
     }
 
     private static String formatTimeAgo(LocalDateTime createdAt) {

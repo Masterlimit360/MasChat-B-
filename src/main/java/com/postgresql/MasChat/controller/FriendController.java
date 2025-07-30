@@ -29,6 +29,12 @@ public class FriendController {
         return ResponseEntity.ok(suggestions);
     }
 
+    @GetMapping("/messenger-suggestions/{userId}")
+    public ResponseEntity<List<User>> getMessengerSuggestions(@PathVariable Long userId) {
+        List<User> suggestions = friendService.getMessengerSuggestions(userId);
+        return ResponseEntity.ok(suggestions);
+    }
+
     @PostMapping("/request")
     public ResponseEntity<Void> sendFriendRequest(
         @RequestParam Long senderId,

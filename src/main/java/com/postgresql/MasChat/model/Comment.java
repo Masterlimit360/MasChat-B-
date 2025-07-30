@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -43,12 +43,12 @@ public class Comment {
 
     // Child comments (replies)
     @OneToMany(mappedBy = "parentComment", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
-    @JsonManagedReference
+    @JsonIgnore
     private Set<Comment> replies = new HashSet<>();
 
     // Users who liked this comment
     @OneToMany(mappedBy = "comment", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
-    @JsonManagedReference
+    @JsonIgnore
     private Set<Like> likes = new HashSet<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -123,14 +123,15 @@ public class Comment {
     }
 
     public int getLikeCount() {
-        return likes.size();
+        return likes != null ? likes.size() : 0;
     }
 
     public int getReplyCount() {
-        return replies.size();
+        return replies != null ? replies.size() : 0;
     }
 
     public boolean isLikedByUser(Long userId) {
-        return likes.stream().anyMatch(like -> like.getUser().getId().equals(userId));
+        if (likes == null) return false;
+        return likes.stream().anyMatch(like -> like.getUser() != null && like.getUser().getId() != null && like.getUser().getId().equals(userId));
     }
 }
