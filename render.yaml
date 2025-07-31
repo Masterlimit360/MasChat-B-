@@ -12,6 +12,8 @@ services:
         generateValue: true
       - key: JWT_EXPIRATION
         value: 86400000
+      - key: PORT
+        value: 8080
     secrets:
       - key: DATABASE_URL
         sync: false

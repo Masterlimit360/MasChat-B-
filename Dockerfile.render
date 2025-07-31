@@ -53,9 +53,16 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=render
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
+# Ensure the render profile is used
+ENV SPRING_PROFILES_ACTIVE=render
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8080}/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 
+# Copy startup script
+COPY startup-debug.sh .
+RUN chmod +x startup-debug.sh
+
+# Run the application with debug script
+ENTRYPOINT ["./startup-debug.sh"] 

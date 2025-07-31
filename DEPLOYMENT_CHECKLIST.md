@@ -31,7 +31,7 @@
 - [ ] Leave start command empty
 
 ### Step 2: Configure Environment Variables
-- [ ] Add `SPRING_PROFILES_ACTIVE` = `render`
+- [ ] Add `SPRING_PROFILES_ACTIVE` = `render` ⚠️ **CRITICAL**
 - [ ] Add `DATABASE_URL` = `postgresql://maschatdb_user:YZ95BM0wLpPCDMGoBy8lHBWKRvQdJXzr@dpg-d25f0jnfte5s73847gc0-a/maschatdb`
 - [ ] Add `DATABASE_USERNAME` = `maschatdb_user`
 - [ ] Add `DATABASE_PASSWORD` = `YZ95BM0wLpPCDMGoBy8lHBWKRvQdJXzr`
@@ -64,6 +64,7 @@
 ## 🚨 Troubleshooting
 
 ### Common Issues
+- [ ] **"UnknownHostException: postgres"** → Set `SPRING_PROFILES_ACTIVE=render` ⚠️ **CRITICAL**
 - [ ] Database connection failed → Check DATABASE_URL and credentials
 - [ ] Build failed → Check Root Directory is set to `MasChat-B-`
 - [ ] Application startup failed → Check environment variables
