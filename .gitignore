@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Security and Credentials ###
+database-credentials.txt
+*.env
+.env.local
+.env.production
+.env.development

@@ -1,17 +1,8 @@
 # Maven
 target/
 !target/*.jar
-!target/*.war
-!target/*.ear
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
+!target/classes/
+!target/test-classes/
 
 # IDE
 .idea/
@@ -19,17 +10,12 @@ buildNumber.properties
 *.iml
 *.ipr
 .vscode/
-*.swp
-*.swo
-*~
+.settings/
+.project
+.classpath
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # Logs
@@ -45,23 +31,11 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 
-# nyc test coverage
-.nyc_output
-
 # Dependency directories
 node_modules/
 
 # Optional npm cache directory
 .npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -72,42 +46,26 @@ node_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
+# dotenv environment variables file
+.env
 
 # Git
 .git/
 .gitignore
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose*.yml
-
-# Environment files
-.env*
-!.env.example
-
 # Documentation
-README.md
 *.md
+!README.md
+
+# Scripts
+*.bat
+*.sh
+!mvnw
+!mvnw.cmd
 
 # Test files
 src/test/
-test/
-tests/ 
+
+# Temporary files
+*.tmp
+*.temp 

@@ -33,6 +33,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/health", "/error").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers("/api/auth/**", "/api/auth/test", "/api/auth/test-token").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/ws-chat/**").permitAll()
