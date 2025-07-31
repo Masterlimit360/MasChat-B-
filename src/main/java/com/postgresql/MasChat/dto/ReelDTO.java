@@ -6,14 +6,14 @@ import java.util.stream.Collectors;
 
 public class ReelDTO {
     private String id;
-    private Long userId;
+    private String userId;
     private String username;
     private String profilePicture;
     private String mediaUrl;
     private String caption;
     private String createdAt;
     private String videoUrl;
-    private List<Long> likedBy;
+    private List<String> likedBy;
     private int likeCount;
     private int commentCount;
     private int shareCount;
@@ -21,7 +21,7 @@ public class ReelDTO {
     public static ReelDTO fromEntity(Reel reel) {
         ReelDTO dto = new ReelDTO();
         dto.setId(String.valueOf(reel.getId()));
-        dto.setUserId(reel.getUser().getId());
+        dto.setUserId(reel.getUser().getId().toString());
         dto.setUsername(reel.getUser().getUsername());
         dto.setProfilePicture(reel.getUser().getProfilePicture());
         
@@ -38,10 +38,10 @@ public class ReelDTO {
         
         System.out.println("ReelDTO created - ID: " + dto.getId() + ", Media URL: " + mediaUrl);
         
-        // Convert likedBy Set<User> to List<Long>
+        // Convert likedBy Set<User> to List<String>
         if (reel.getLikedBy() != null) {
             dto.setLikedBy(reel.getLikedBy().stream()
-                .map(user -> user.getId())
+                .map(user -> user.getId().toString())
                 .collect(Collectors.toList()));
             dto.setLikeCount(reel.getLikedBy().size());
         } else {
@@ -64,8 +64,8 @@ public class ReelDTO {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getProfilePicture() { return profilePicture; }
@@ -78,8 +78,8 @@ public class ReelDTO {
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     public String getVideoUrl() { return videoUrl; }
     public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
-    public List<Long> getLikedBy() { return likedBy; }
-    public void setLikedBy(List<Long> likedBy) { this.likedBy = likedBy; }
+    public List<String> getLikedBy() { return likedBy; }
+    public void setLikedBy(List<String> likedBy) { this.likedBy = likedBy; }
     public int getLikeCount() { return likeCount; }
     public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
     public int getCommentCount() { return commentCount; }

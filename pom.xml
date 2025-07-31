@@ -19,14 +19,7 @@
         <postgresql.version>42.7.5</postgresql.version>
     </properties>
     
-    <profiles>
-        <profile>
-            <id>production</id>
-            <properties>
-                <spring.profiles.active>render</spring.profiles.active>
-            </properties>
-        </profile>
-    </profiles>
+
     
     <dependencies>
         <!-- Spring Boot Starters -->

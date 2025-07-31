@@ -1,7 +1,7 @@
 package com.postgresql.MasChat.dto;
 
 public class UserDTO {
-    private Long id;
+    private String id;
     private String username;
     private String email;
     private String fullName;
@@ -12,8 +12,8 @@ public class UserDTO {
     private UserDetailsDTO details;
 
     // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getEmail() { return email; }
@@ -35,7 +35,7 @@ public class UserDTO {
     public static UserDTO fromEntity(com.postgresql.MasChat.model.User user) {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
+        dto.setId(user.getId().toString());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setFullName(user.getFullName());

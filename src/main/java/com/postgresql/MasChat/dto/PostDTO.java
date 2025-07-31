@@ -5,19 +5,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PostDTO {
-    private Long id;
+    private String id;
     private String content;
     private String imageUrl;
     private String videoUrl;
     private LocalDateTime createdAt;
     private UserDTO user;
-    private List<Long> likedBy;
+    private List<String> likedBy;
     private int likeCount;
     private int commentCount;
     private int shareCount;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public String getImageUrl() { return imageUrl; }
@@ -28,8 +28,8 @@ public class PostDTO {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public UserDTO getUser() { return user; }
     public void setUser(UserDTO user) { this.user = user; }
-    public List<Long> getLikedBy() { return likedBy; }
-    public void setLikedBy(List<Long> likedBy) { this.likedBy = likedBy; }
+    public List<String> getLikedBy() { return likedBy; }
+    public void setLikedBy(List<String> likedBy) { this.likedBy = likedBy; }
     public int getLikeCount() { return likeCount; }
     public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
     public int getCommentCount() { return commentCount; }
@@ -40,17 +40,17 @@ public class PostDTO {
     public static PostDTO fromEntity(com.postgresql.MasChat.model.Post post) {
         if (post == null) return null;
         PostDTO dto = new PostDTO();
-        dto.setId(post.getId());
+        dto.setId(post.getId().toString());
         dto.setContent(post.getContent());
         dto.setImageUrl(post.getImageUrl());
         dto.setVideoUrl(post.getVideoUrl());
         dto.setCreatedAt(post.getCreatedAt());
         dto.setUser(UserDTO.fromEntity(post.getUser()));
         
-        // Convert likedBy Set<User> to List<Long>
+        // Convert likedBy Set<User> to List<String>
         if (post.getLikedBy() != null) {
             dto.setLikedBy(post.getLikedBy().stream()
-                .map(user -> user.getId())
+                .map(user -> user.getId().toString())
                 .collect(Collectors.toList()));
             dto.setLikeCount(post.getLikedBy().size());
         } else {
